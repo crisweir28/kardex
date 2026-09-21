@@ -1,0 +1,1029 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Kardex API Docs</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&family=Roboto+Mono:wght@400;600&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Open Sans', sans-serif;
+    background: #fafafa;
+    color: #3b4151;
+    font-size: 14px;
+  }
+
+  /* ── HEADER ── */
+  .swagger-header {
+    background: #1b1b1b;
+    padding: 16px 0;
+  }
+
+  .swagger-header-inner {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 0 20px;
+  }
+
+  .swagger-header h1 {
+    color: #fff;
+    font-size: 28px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .swagger-header h1 .logo {
+    background: #89bf04;
+    color: #fff;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 3px 6px;
+    border-radius: 4px;
+    letter-spacing: 1px;
+  }
+
+  .swagger-meta {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-top: 8px;
+  }
+
+  .swagger-meta .base-url {
+    font-family: 'Roboto Mono', monospace;
+    font-size: 13px;
+    color: #89bf04;
+  }
+
+  .swagger-meta .version {
+    background: #89bf04;
+    color: #fff;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 3px;
+  }
+
+  .scheme-bar {
+    background: #fff;
+    border-bottom: 1px solid #e0e0e0;
+    padding: 10px 0;
+  }
+
+  .scheme-inner {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 0 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .scheme-inner label {
+    font-size: 12px;
+    font-weight: 700;
+    color: #3b4151;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .scheme-inner select {
+    border: 1px solid #d8dde6;
+    border-radius: 4px;
+    padding: 5px 10px;
+    font-size: 13px;
+    background: #fff;
+    color: #3b4151;
+    outline: none;
+    cursor: pointer;
+  }
+
+  /* ── MAIN ── */
+  .main {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 20px;
+  }
+
+  /* ── TAG GROUP ── */
+  .tag-section {
+    margin-bottom: 10px;
+    border: 1px solid #d8dde6;
+    border-radius: 4px;
+    overflow: hidden;
+  }
+
+  .tag-header {
+    background: #fff;
+    padding: 12px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+    border-bottom: 1px solid #d8dde6;
+    user-select: none;
+    transition: background 0.1s;
+  }
+
+  .tag-header:hover { background: #f5f5f5; }
+
+  .tag-header h2 {
+    font-size: 18px;
+    font-weight: 600;
+    color: #3b4151;
+  }
+
+  .tag-header .tag-desc {
+    font-size: 13px;
+    color: #6b7280;
+    margin-left: 12px;
+  }
+
+  .tag-chevron {
+    font-size: 18px;
+    color: #6b7280;
+    transition: transform 0.2s;
+  }
+
+  .tag-chevron.open { transform: rotate(180deg); }
+
+  .tag-body { display: none; }
+  .tag-body.open { display: block; }
+
+  /* ── ENDPOINT ROW ── */
+  .ep-row {
+    border-bottom: 1px solid #e8e8e8;
+    overflow: hidden;
+  }
+
+  .ep-row:last-child { border-bottom: none; }
+
+  .ep-summary {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 20px;
+    cursor: pointer;
+    transition: filter 0.15s;
+    user-select: none;
+  }
+
+  /* color por método */
+  .ep-row.get    .ep-summary { background: #ebf3fb; border-left: 4px solid #61affe; }
+  .ep-row.post   .ep-summary { background: #e7f6ec; border-left: 4px solid #49cc90; }
+  .ep-row.put    .ep-summary { background: #fef3e2; border-left: 4px solid #fca130; }
+  .ep-row.delete .ep-summary { background: #fde8e8; border-left: 4px solid #f93e3e; }
+
+  .ep-row.get    .ep-summary:hover { background: #dbeaf7; }
+  .ep-row.post   .ep-summary:hover { background: #d5f0de; }
+  .ep-row.put    .ep-summary:hover { background: #fde9c8; }
+  .ep-row.delete .ep-summary:hover { background: #fcd5d5; }
+
+  .method-label {
+    font-family: 'Roboto Mono', monospace;
+    font-size: 12px;
+    font-weight: 700;
+    padding: 5px 10px;
+    border-radius: 3px;
+    min-width: 70px;
+    text-align: center;
+    color: #fff;
+    text-transform: uppercase;
+  }
+
+  .get    .method-label { background: #61affe; }
+  .post   .method-label { background: #49cc90; }
+  .put    .method-label { background: #fca130; }
+  .delete .method-label { background: #f93e3e; }
+
+  .ep-path {
+    font-family: 'Roboto Mono', monospace;
+    font-size: 14px;
+    font-weight: 600;
+    color: #3b4151;
+  }
+
+  .ep-desc {
+    font-size: 13px;
+    color: #6b7280;
+    margin-left: 4px;
+  }
+
+  .ep-chevron {
+    margin-left: auto;
+    font-size: 14px;
+    color: #6b7280;
+    transition: transform 0.2s;
+  }
+
+  .ep-chevron.open { transform: rotate(90deg); }
+
+  /* ── EXPANDED BODY ── */
+  .ep-body {
+    display: none;
+    background: #fff;
+    border-top: 1px solid #e8e8e8;
+    padding: 20px 24px;
+  }
+
+  .ep-body.open { display: block; }
+
+  .auth-required {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: #fffbeb;
+    border: 1px solid #fcd34d;
+    color: #92400e;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 4px;
+    margin-bottom: 16px;
+  }
+
+  .section-title {
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #6b7280;
+    margin: 16px 0 8px;
+    padding-bottom: 4px;
+    border-bottom: 1px solid #e8e8e8;
+  }
+
+  table.params-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+    margin-bottom: 8px;
+  }
+
+  table.params-table th {
+    text-align: left;
+    padding: 8px 12px;
+    background: #f5f7fa;
+    color: #6b7280;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    border: 1px solid #e8e8e8;
+  }
+
+  table.params-table td {
+    padding: 9px 12px;
+    border: 1px solid #e8e8e8;
+    vertical-align: top;
+  }
+
+  .param-name {
+    font-family: 'Roboto Mono', monospace;
+    font-size: 13px;
+    font-weight: 600;
+    color: #3b4151;
+  }
+
+  .param-type {
+    font-family: 'Roboto Mono', monospace;
+    font-size: 11px;
+    color: #777;
+    display: block;
+    margin-top: 2px;
+  }
+
+  .required-badge {
+    font-size: 10px;
+    color: #f93e3e;
+    font-style: italic;
+  }
+
+  .optional-badge {
+    font-size: 10px;
+    color: #aaa;
+    font-style: italic;
+  }
+
+  pre.example-block {
+    background: #1b1b1b;
+    color: #e8e8e8;
+    font-family: 'Roboto Mono', monospace;
+    font-size: 12px;
+    padding: 14px 16px;
+    border-radius: 4px;
+    overflow-x: auto;
+    line-height: 1.6;
+    margin-top: 4px;
+  }
+
+  .response-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 10px 0;
+    border-bottom: 1px solid #f0f0f0;
+  }
+
+  .response-row:last-child { border-bottom: none; }
+
+  .res-code {
+    font-family: 'Roboto Mono', monospace;
+    font-size: 13px;
+    font-weight: 700;
+    min-width: 48px;
+  }
+
+  .res-2xx { color: #49cc90; }
+  .res-4xx { color: #fca130; }
+  .res-5xx { color: #f93e3e; }
+
+  .res-desc { font-size: 13px; color: #6b7280; }
+
+  /* ── INFO BOX ── */
+  .info-box {
+    background: #fff;
+    border: 1px solid #d8dde6;
+    border-radius: 4px;
+    padding: 20px 24px;
+    margin-bottom: 20px;
+  }
+
+  .info-box h2 {
+    font-size: 22px;
+    font-weight: 700;
+    margin-bottom: 6px;
+  }
+
+  .info-box p {
+    font-size: 13px;
+    color: #6b7280;
+    line-height: 1.6;
+    margin-bottom: 12px;
+  }
+
+  .info-url {
+    font-family: 'Roboto Mono', monospace;
+    font-size: 13px;
+    background: #f5f7fa;
+    border: 1px solid #e0e0e0;
+    padding: 8px 14px;
+    border-radius: 4px;
+    display: inline-block;
+  }
+
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-thumb { background: #ccc; border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="swagger-header">
+  <div class="swagger-header-inner">
+    <h1>
+      <span class="logo">API</span>
+      Kardex Escolar
+    </h1>
+    <div class="swagger-meta">
+      <span class="base-url">http://localhost:3000/api</span>
+      <span class="version">v1.0.0</span>
+    </div>
+  </div>
+</div>
+
+<div class="scheme-bar">
+  <div class="scheme-inner">
+    <label>Schemes</label>
+    <select><option>HTTP</option><option>HTTPS</option></select>
+  </div>
+</div>
+
+<div class="main">
+
+  <!-- INFO -->
+  <div class="info-box">
+    <h2>Sistema de Kardex Escolar — REST API</h2>
+    <p>API para gestión de alumnos, materias, docentes y calificaciones. Autenticación por sesión con cookies httpOnly. Todos los endpoints devuelven JSON.</p>
+    <span class="info-url">Base URL: http://localhost:3000/api</span>
+  </div>
+
+  <!-- ── AUTH ── -->
+  <div class="tag-section">
+    <div class="tag-header" onclick="toggleTag(this)">
+      <div style="display:flex;align-items:center;gap:8px">
+        <h2>auth</h2>
+        <span class="tag-desc">Autenticación y sesiones</span>
+      </div>
+      <span class="tag-chevron open">▼</span>
+    </div>
+    <div class="tag-body open">
+
+      <div class="ep-row post">
+        <div class="ep-summary" onclick="toggleEp(this)">
+          <span class="method-label">POST</span>
+          <span class="ep-path">/auth/login</span>
+          <span class="ep-desc">Login de alumno</span>
+          <span class="ep-chevron">▶</span>
+        </div>
+        <div class="ep-body">
+          <div class="section-title">Parámetros (Body JSON)</div>
+          <table class="params-table">
+            <tr><th>Nombre</th><th>Descripción</th></tr>
+            <tr><td><span class="param-name">matricula</span><span class="param-type">string</span></td><td>Matrícula del alumno (ej. A010) <span class="required-badge">* requerido</span></td></tr>
+            <tr><td><span class="param-name">password</span><span class="param-type">string</span></td><td>Contraseña en texto plano <span class="required-badge">* requerido</span></td></tr>
+          </table>
+          <div class="section-title">Ejemplo</div>
+          <pre class="example-block">POST /api/auth/login
+Content-Type: application/json
+
+{
+  "matricula": "A010",
+  "password": "pass123"
+}</pre>
+          <div class="section-title">Respuestas</div>
+          <div class="response-row"><span class="res-code res-2xx">200</span><span class="res-desc">Login exitoso — devuelve datos del alumno y establece cookie de sesión</span></div>
+          <div class="response-row"><span class="res-code res-4xx">401</span><span class="res-desc">Credenciales incorrectas</span></div>
+        </div>
+      </div>
+
+      <div class="ep-row post">
+        <div class="ep-summary" onclick="toggleEp(this)">
+          <span class="method-label">POST</span>
+          <span class="ep-path">/auth/admin/login</span>
+          <span class="ep-desc">Login de administrador</span>
+          <span class="ep-chevron">▶</span>
+        </div>
+        <div class="ep-body">
+          <div class="section-title">Parámetros (Body JSON)</div>
+          <table class="params-table">
+            <tr><th>Nombre</th><th>Descripción</th></tr>
+            <tr><td><span class="param-name">usuario</span><span class="param-type">string</span></td><td>Nombre de usuario admin <span class="required-badge">* requerido</span></td></tr>
+            <tr><td><span class="param-name">password</span><span class="param-type">string</span></td><td>Contraseña <span class="required-badge">* requerido</span></td></tr>
+          </table>
+          <div class="section-title">Ejemplo</div>
+          <pre class="example-block">{ "usuario": "admin", "password": "admin123" }</pre>
+          <div class="section-title">Respuestas</div>
+          <div class="response-row"><span class="res-code res-2xx">200</span><span class="res-desc">Login exitoso</span></div>
+          <div class="response-row"><span class="res-code res-4xx">401</span><span class="res-desc">Credenciales incorrectas</span></div>
+        </div>
+      </div>
+
+      <div class="ep-row post">
+        <div class="ep-summary" onclick="toggleEp(this)">
+          <span class="method-label">POST</span>
+          <span class="ep-path">/auth/docente/login</span>
+          <span class="ep-desc">Login de docente</span>
+          <span class="ep-chevron">▶</span>
+        </div>
+        <div class="ep-body">
+          <div class="section-title">Parámetros (Body JSON)</div>
+          <table class="params-table">
+            <tr><th>Nombre</th><th>Descripción</th></tr>
+            <tr><td><span class="param-name">matricula</span><span class="param-type">string</span></td><td>Matrícula del docente (ej. D001) <span class="required-badge">* requerido</span></td></tr>
+            <tr><td><span class="param-name">password</span><span class="param-type">string</span></td><td>Contraseña <span class="required-badge">* requerido</span></td></tr>
+          </table>
+          <div class="section-title">Respuestas</div>
+          <div class="response-row"><span class="res-code res-2xx">200</span><span class="res-desc">Login exitoso</span></div>
+          <div class="response-row"><span class="res-code res-4xx">401</span><span class="res-desc">Credenciales incorrectas</span></div>
+        </div>
+      </div>
+
+      <div class="ep-row post">
+        <div class="ep-summary" onclick="toggleEp(this)">
+          <span class="method-label">POST</span>
+          <span class="ep-path">/auth/logout</span>
+          <span class="ep-desc">Cerrar sesión activa</span>
+          <span class="ep-chevron">▶</span>
+        </div>
+        <div class="ep-body">
+          <p style="font-size:13px;color:#6b7280">No requiere body. Destruye la sesión del usuario autenticado.</p>
+          <div class="section-title">Respuestas</div>
+          <div class="response-row"><span class="res-code res-2xx">200</span><span class="res-desc">Sesión cerrada correctamente</span></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ── KARDEX ── -->
+  <div class="tag-section">
+    <div class="tag-header" onclick="toggleTag(this)">
+      <div style="display:flex;align-items:center;gap:8px">
+        <h2>kardex</h2>
+        <span class="tag-desc">Kardex del alumno en sesión</span>
+      </div>
+      <span class="tag-chevron open">▼</span>
+    </div>
+    <div class="tag-body open">
+
+      <div class="ep-row get">
+        <div class="ep-summary" onclick="toggleEp(this)">
+          <span class="method-label">GET</span>
+          <span class="ep-path">/kardex</span>
+          <span class="ep-desc">Obtener kardex completo del alumno en sesión</span>
+          <span class="ep-chevron">▶</span>
+        </div>
+        <div class="ep-body">
+          <div class="auth-required">🔒 Requiere sesión de alumno</div>
+          <div class="section-title">Respuesta 200</div>
+          <pre class="example-block">{
+  "alumno": { "matricula": "A010", "nombre": "Luis", "carrera": "Ingeniería en Sistemas" },
+  "semestres": [
+    {
+      "semestre": "2023-1",
+      "promedio": 8.75,
+      "materias": [
+        {
+          "clave": "MAT101",
+          "materia": "Cálculo Diferencial",
+          "creditos": 8,
+          "calificacion": 9.0,
+          "docente": "Carlos Ramírez Torres",
+          "estatus": "Aprobado"
+        }
+      ]
+    }
+  ]
+}</pre>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ── ALUMNOS ── -->
+  <div class="tag-section">
+    <div class="tag-header" onclick="toggleTag(this)">
+      <div style="display:flex;align-items:center;gap:8px">
+        <h2>alumnos</h2>
+        <span class="tag-desc">Gestión de alumnos (Admin)</span>
+      </div>
+      <span class="tag-chevron open">▼</span>
+    </div>
+    <div class="tag-body open">
+
+      <div class="ep-row get">
+        <div class="ep-summary" onclick="toggleEp(this)">
+          <span class="method-label">GET</span>
+          <span class="ep-path">/admin/alumnos</span>
+          <span class="ep-desc">Listar todos los alumnos</span>
+          <span class="ep-chevron">▶</span>
+        </div>
+        <div class="ep-body">
+          <div class="auth-required">🔒 Requiere sesión de admin</div>
+          <div class="section-title">Respuesta 200</div>
+          <pre class="example-block">[
+  { "id": 1, "matricula": "A010", "nombre": "Luis", "apellidos": "Martínez", "carrera": "..." },
+  ...
+]</pre>
+        </div>
+      </div>
+
+      <div class="ep-row post">
+        <div class="ep-summary" onclick="toggleEp(this)">
+          <span class="method-label">POST</span>
+          <span class="ep-path">/admin/alumnos</span>
+          <span class="ep-desc">Crear nuevo alumno</span>
+          <span class="ep-chevron">▶</span>
+        </div>
+        <div class="ep-body">
+          <div class="auth-required">🔒 Requiere sesión de admin</div>
+          <div class="section-title">Parámetros (Body JSON)</div>
+          <table class="params-table">
+            <tr><th>Nombre</th><th>Descripción</th></tr>
+            <tr><td><span class="param-name">matricula</span><span class="param-type">string</span></td><td>Matrícula única <span class="required-badge">* requerido</span></td></tr>
+            <tr><td><span class="param-name">nombre</span><span class="param-type">string</span></td><td>Nombre(s) <span class="required-badge">* requerido</span></td></tr>
+            <tr><td><span class="param-name">apellidos</span><span class="param-type">string</span></td><td>Apellidos <span class="required-badge">* requerido</span></td></tr>
+            <tr><td><span class="param-name">carrera</span><span class="param-type">string</span></td><td>Nombre de la carrera <span class="required-badge">* requerido</span></td></tr>
+            <tr><td><span class="param-name">password</span><span class="param-type">string</span></td><td>Contraseña (se hashea con bcrypt) <span class="required-badge">* requerido</span></td></tr>
+          </table>
+          <div class="section-title">Ejemplo</div>
+          <pre class="example-block">{
+  "matricula": "A099",
+  "nombre": "Juan",
+  "apellidos": "Pérez López",
+  "carrera": "Ingeniería en Sistemas",
+  "password": "pass123"
+}</pre>
+          <div class="section-title">Respuestas</div>
+          <div class="response-row"><span class="res-code res-2xx">200</span><span class="res-desc">Alumno creado correctamente</span></div>
+          <div class="response-row"><span class="res-code res-4xx">400</span><span class="res-desc">Matrícula ya existente u otros errores de validación</span></div>
+        </div>
+      </div>
+
+      <div class="ep-row delete">
+        <div class="ep-summary" onclick="toggleEp(this)">
+          <span class="method-label">DELETE</span>
+          <span class="ep-path">/admin/alumnos/{id}</span>
+          <span class="ep-desc">Eliminar alumno y sus calificaciones</span>
+          <span class="ep-chevron">▶</span>
+        </div>
+        <div class="ep-body">
+          <div class="auth-required">🔒 Requiere sesión de admin</div>
+          <div class="section-title">Path Parameters</div>
+          <table class="params-table">
+            <tr><th>Nombre</th><th>Descripción</th></tr>
+            <tr><td><span class="param-name">id</span><span class="param-type">integer</span></td><td>ID del alumno en la tabla alumnos <span class="required-badge">* requerido</span></td></tr>
+          </table>
+          <div class="section-title">Respuestas</div>
+          <div class="response-row"><span class="res-code res-2xx">200</span><span class="res-desc">Alumno eliminado (cascada a calificaciones)</span></div>
+          <div class="response-row"><span class="res-code res-4xx">404</span><span class="res-desc">Alumno no encontrado</span></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ── MATERIAS ── -->
+  <div class="tag-section">
+    <div class="tag-header" onclick="toggleTag(this)">
+      <div style="display:flex;align-items:center;gap:8px">
+        <h2>materias</h2>
+        <span class="tag-desc">Gestión de materias (Admin)</span>
+      </div>
+      <span class="tag-chevron open">▼</span>
+    </div>
+    <div class="tag-body open">
+
+      <div class="ep-row get">
+        <div class="ep-summary" onclick="toggleEp(this)">
+          <span class="method-label">GET</span>
+          <span class="ep-path">/admin/materias</span>
+          <span class="ep-desc">Listar todas las materias</span>
+          <span class="ep-chevron">▶</span>
+        </div>
+        <div class="ep-body">
+          <div class="auth-required">🔒 Requiere sesión de admin</div>
+          <pre class="example-block">[{ "id": 1, "clave": "MAT101", "nombre": "Cálculo Diferencial", "creditos": 8 }]</pre>
+        </div>
+      </div>
+
+      <div class="ep-row post">
+        <div class="ep-summary" onclick="toggleEp(this)">
+          <span class="method-label">POST</span>
+          <span class="ep-path">/admin/materias</span>
+          <span class="ep-desc">Crear nueva materia</span>
+          <span class="ep-chevron">▶</span>
+        </div>
+        <div class="ep-body">
+          <div class="auth-required">🔒 Requiere sesión de admin</div>
+          <table class="params-table">
+            <tr><th>Nombre</th><th>Descripción</th></tr>
+            <tr><td><span class="param-name">clave</span><span class="param-type">string</span></td><td>Clave única (ej. MAT101) <span class="required-badge">* requerido</span></td></tr>
+            <tr><td><span class="param-name">nombre</span><span class="param-type">string</span></td><td>Nombre completo de la materia <span class="required-badge">* requerido</span></td></tr>
+            <tr><td><span class="param-name">creditos</span><span class="param-type">integer</span></td><td>Número de créditos <span class="required-badge">* requerido</span></td></tr>
+          </table>
+          <pre class="example-block">{ "clave": "PRG501", "nombre": "Inteligencia Artificial", "creditos": 8 }</pre>
+        </div>
+      </div>
+
+      <div class="ep-row delete">
+        <div class="ep-summary" onclick="toggleEp(this)">
+          <span class="method-label">DELETE</span>
+          <span class="ep-path">/admin/materias/{id}</span>
+          <span class="ep-desc">Eliminar materia</span>
+          <span class="ep-chevron">▶</span>
+        </div>
+        <div class="ep-body">
+          <div class="auth-required">🔒 Requiere sesión de admin</div>
+          <div class="section-title">Path Parameters</div>
+          <table class="params-table">
+            <tr><th>Nombre</th><th>Descripción</th></tr>
+            <tr><td><span class="param-name">id</span><span class="param-type">integer</span></td><td>ID de la materia <span class="required-badge">* requerido</span></td></tr>
+          </table>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ── SEMESTRES ── -->
+  <div class="tag-section">
+    <div class="tag-header" onclick="toggleTag(this)">
+      <div style="display:flex;align-items:center;gap:8px">
+        <h2>semestres</h2>
+        <span class="tag-desc">Gestión de semestres (Admin)</span>
+      </div>
+      <span class="tag-chevron open">▼</span>
+    </div>
+    <div class="tag-body open">
+
+      <div class="ep-row get">
+        <div class="ep-summary" onclick="toggleEp(this)">
+          <span class="method-label">GET</span>
+          <span class="ep-path">/admin/semestres</span>
+          <span class="ep-desc">Listar todos los semestres</span>
+          <span class="ep-chevron">▶</span>
+        </div>
+        <div class="ep-body">
+          <div class="auth-required">🔒 Requiere sesión de admin</div>
+          <pre class="example-block">[{ "id": 1, "nombre": "2023-1" }, { "id": 2, "nombre": "2023-2" }]</pre>
+        </div>
+      </div>
+
+      <div class="ep-row post">
+        <div class="ep-summary" onclick="toggleEp(this)">
+          <span class="method-label">POST</span>
+          <span class="ep-path">/admin/semestres</span>
+          <span class="ep-desc">Crear nuevo semestre</span>
+          <span class="ep-chevron">▶</span>
+        </div>
+        <div class="ep-body">
+          <div class="auth-required">🔒 Requiere sesión de admin</div>
+          <table class="params-table">
+            <tr><th>Nombre</th><th>Descripción</th></tr>
+            <tr><td><span class="param-name">nombre</span><span class="param-type">string</span></td><td>Nombre del semestre (ej. 2025-1) <span class="required-badge">* requerido</span></td></tr>
+          </table>
+          <pre class="example-block">{ "nombre": "2025-1" }</pre>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ── DOCENTES ── -->
+  <div class="tag-section">
+    <div class="tag-header" onclick="toggleTag(this)">
+      <div style="display:flex;align-items:center;gap:8px">
+        <h2>docentes</h2>
+        <span class="tag-desc">Gestión de docentes y asignaciones (Admin)</span>
+      </div>
+      <span class="tag-chevron open">▼</span>
+    </div>
+    <div class="tag-body open">
+
+      <div class="ep-row get">
+        <div class="ep-summary" onclick="toggleEp(this)">
+          <span class="method-label">GET</span>
+          <span class="ep-path">/admin/docentes</span>
+          <span class="ep-desc">Listar todos los docentes</span>
+          <span class="ep-chevron">▶</span>
+        </div>
+        <div class="ep-body">
+          <div class="auth-required">🔒 Requiere sesión de admin</div>
+          <pre class="example-block">[{ "id": 1, "matricula": "D001", "nombre": "Carlos", "apellidos": "Ramírez", "email": "..." }]</pre>
+        </div>
+      </div>
+
+      <div class="ep-row post">
+        <div class="ep-summary" onclick="toggleEp(this)">
+          <span class="method-label">POST</span>
+          <span class="ep-path">/admin/docentes</span>
+          <span class="ep-desc">Crear nuevo docente</span>
+          <span class="ep-chevron">▶</span>
+        </div>
+        <div class="ep-body">
+          <div class="auth-required">🔒 Requiere sesión de admin</div>
+          <table class="params-table">
+            <tr><th>Nombre</th><th>Descripción</th></tr>
+            <tr><td><span class="param-name">matricula</span><span class="param-type">string</span></td><td>Matrícula única <span class="required-badge">* requerido</span></td></tr>
+            <tr><td><span class="param-name">nombre</span><span class="param-type">string</span></td><td>Nombre(s) <span class="required-badge">* requerido</span></td></tr>
+            <tr><td><span class="param-name">apellidos</span><span class="param-type">string</span></td><td>Apellidos <span class="required-badge">* requerido</span></td></tr>
+            <tr><td><span class="param-name">email</span><span class="param-type">string</span></td><td>Correo electrónico <span class="required-badge">* requerido</span></td></tr>
+          </table>
+        </div>
+      </div>
+
+      <div class="ep-row post">
+        <div class="ep-summary" onclick="toggleEp(this)">
+          <span class="method-label">POST</span>
+          <span class="ep-path">/admin/docentes/asignar</span>
+          <span class="ep-desc">Asignar docente a materia y semestre</span>
+          <span class="ep-chevron">▶</span>
+        </div>
+        <div class="ep-body">
+          <div class="auth-required">🔒 Requiere sesión de admin</div>
+          <table class="params-table">
+            <tr><th>Nombre</th><th>Descripción</th></tr>
+            <tr><td><span class="param-name">matricula_docente</span><span class="param-type">string</span></td><td>Matrícula del docente <span class="required-badge">* requerido</span></td></tr>
+            <tr><td><span class="param-name">clave_materia</span><span class="param-type">string</span></td><td>Clave de la materia <span class="required-badge">* requerido</span></td></tr>
+            <tr><td><span class="param-name">semestre</span><span class="param-type">string</span></td><td>Nombre del semestre <span class="required-badge">* requerido</span></td></tr>
+          </table>
+          <pre class="example-block">{ "matricula_docente": "D001", "clave_materia": "MAT101", "semestre": "2024-1" }</pre>
+          <p style="font-size:12px;color:#6b7280;margin-top:8px">Si la asignación ya existe, actualiza el docente (ON DUPLICATE KEY UPDATE).</p>
+        </div>
+      </div>
+
+      <div class="ep-row get">
+        <div class="ep-summary" onclick="toggleEp(this)">
+          <span class="method-label">GET</span>
+          <span class="ep-path">/admin/materias_docente</span>
+          <span class="ep-desc">Listar todas las asignaciones docente-materia</span>
+          <span class="ep-chevron">▶</span>
+        </div>
+        <div class="ep-body">
+          <div class="auth-required">🔒 Requiere sesión de admin</div>
+          <pre class="example-block">[{ "materia_id": 1, "semestre_id": 1, "clave_materia": "MAT101", "materia": "Cálculo Diferencial", "semestre": "2024-1", "docente_id": 1, "matricula_docente": "D001", "docente_nombre": "Carlos", "docente_apellidos": "Ramírez" }]</pre>
+        </div>
+      </div>
+
+      <div class="ep-row delete">
+        <div class="ep-summary" onclick="toggleEp(this)">
+          <span class="method-label">DELETE</span>
+          <span class="ep-path">/admin/docentes/{id}</span>
+          <span class="ep-desc">Eliminar docente y sus asignaciones</span>
+          <span class="ep-chevron">▶</span>
+        </div>
+        <div class="ep-body">
+          <div class="auth-required">🔒 Requiere sesión de admin</div>
+          <table class="params-table">
+            <tr><th>Nombre</th><th>Descripción</th></tr>
+            <tr><td><span class="param-name">id</span><span class="param-type">integer</span></td><td>ID del docente <span class="required-badge">* requerido</span></td></tr>
+          </table>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ── CALIFICACIONES ── -->
+  <div class="tag-section">
+    <div class="tag-header" onclick="toggleTag(this)">
+      <div style="display:flex;align-items:center;gap:8px">
+        <h2>calificaciones</h2>
+        <span class="tag-desc">Gestión de calificaciones (Admin)</span>
+      </div>
+      <span class="tag-chevron open">▼</span>
+    </div>
+    <div class="tag-body open">
+
+      <div class="ep-row post">
+        <div class="ep-summary" onclick="toggleEp(this)">
+          <span class="method-label">POST</span>
+          <span class="ep-path">/admin/calificaciones</span>
+          <span class="ep-desc">Asignar calificación individual</span>
+          <span class="ep-chevron">▶</span>
+        </div>
+        <div class="ep-body">
+          <div class="auth-required">🔒 Requiere sesión de admin</div>
+          <table class="params-table">
+            <tr><th>Nombre</th><th>Descripción</th></tr>
+            <tr><td><span class="param-name">matricula</span><span class="param-type">string</span></td><td>Matrícula del alumno <span class="required-badge">* requerido</span></td></tr>
+            <tr><td><span class="param-name">clave_materia</span><span class="param-type">string</span></td><td>Clave de la materia <span class="required-badge">* requerido</span></td></tr>
+            <tr><td><span class="param-name">semestre</span><span class="param-type">string</span></td><td>Nombre del semestre <span class="required-badge">* requerido</span></td></tr>
+            <tr><td><span class="param-name">calificacion</span><span class="param-type">decimal</span></td><td>Calificación 0-10 <span class="required-badge">* requerido</span></td></tr>
+          </table>
+          <pre class="example-block">{ "matricula": "A010", "clave_materia": "MAT101", "semestre": "2024-1", "calificacion": 9.5 }</pre>
+        </div>
+      </div>
+
+      <div class="ep-row post">
+        <div class="ep-summary" onclick="toggleEp(this)">
+          <span class="method-label">POST</span>
+          <span class="ep-path">/admin/calificaciones/bulk</span>
+          <span class="ep-desc">Asignar múltiples calificaciones a un alumno</span>
+          <span class="ep-chevron">▶</span>
+        </div>
+        <div class="ep-body">
+          <div class="auth-required">🔒 Requiere sesión de admin</div>
+          <div class="section-title">Ejemplo</div>
+          <pre class="example-block">{
+  "matricula": "A010",
+  "calificaciones": [
+    { "clave_materia": "MAT101", "semestre": "2024-1", "calificacion": 9.5 },
+    { "clave_materia": "PRG101", "semestre": "2024-1", "calificacion": 8.0 }
+  ]
+}</pre>
+          <div class="section-title">Respuestas</div>
+          <div class="response-row"><span class="res-code res-2xx">200</span><span class="res-desc">{ "mensaje": "2 calificaciones asignadas correctamente" }</span></div>
+        </div>
+      </div>
+
+      <div class="ep-row put">
+        <div class="ep-summary" onclick="toggleEp(this)">
+          <span class="method-label">PUT</span>
+          <span class="ep-path">/admin/calificaciones</span>
+          <span class="ep-desc">Editar calificación existente</span>
+          <span class="ep-chevron">▶</span>
+        </div>
+        <div class="ep-body">
+          <div class="auth-required">🔒 Requiere sesión de admin</div>
+          <pre class="example-block">{ "matricula": "A010", "clave_materia": "MAT101", "semestre": "2024-1", "calificacion": 10.0 }</pre>
+        </div>
+      </div>
+
+      <div class="ep-row delete">
+        <div class="ep-summary" onclick="toggleEp(this)">
+          <span class="method-label">DELETE</span>
+          <span class="ep-path">/admin/calificaciones</span>
+          <span class="ep-desc">Eliminar calificación</span>
+          <span class="ep-chevron">▶</span>
+        </div>
+        <div class="ep-body">
+          <div class="auth-required">🔒 Requiere sesión de admin</div>
+          <pre class="example-block">{ "matricula": "A010", "clave_materia": "MAT101", "semestre": "2024-1" }</pre>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ── DOCENTE ROUTES ── -->
+  <div class="tag-section">
+    <div class="tag-header" onclick="toggleTag(this)">
+      <div style="display:flex;align-items:center;gap:8px">
+        <h2>docente</h2>
+        <span class="tag-desc">Operaciones del docente en sesión</span>
+      </div>
+      <span class="tag-chevron open">▼</span>
+    </div>
+    <div class="tag-body open">
+
+      <div class="ep-row get">
+        <div class="ep-summary" onclick="toggleEp(this)">
+          <span class="method-label">GET</span>
+          <span class="ep-path">/docente/materias</span>
+          <span class="ep-desc">Materias asignadas al docente en sesión</span>
+          <span class="ep-chevron">▶</span>
+        </div>
+        <div class="ep-body">
+          <div class="auth-required">🔒 Requiere sesión de docente</div>
+          <pre class="example-block">[{ "clave_materia": "MAT101", "materia": "Cálculo Diferencial", "semestre": "2024-1" }]</pre>
+        </div>
+      </div>
+
+      <div class="ep-row get">
+        <div class="ep-summary" onclick="toggleEp(this)">
+          <span class="method-label">GET</span>
+          <span class="ep-path">/docente/alumnos</span>
+          <span class="ep-desc">Alumnos de una materia/semestre asignada</span>
+          <span class="ep-chevron">▶</span>
+        </div>
+        <div class="ep-body">
+          <div class="auth-required">🔒 Requiere sesión de docente</div>
+          <div class="section-title">Query Parameters</div>
+          <table class="params-table">
+            <tr><th>Nombre</th><th>Descripción</th></tr>
+            <tr><td><span class="param-name">clave_materia</span><span class="param-type">string</span></td><td>Clave de la materia <span class="required-badge">* requerido</span></td></tr>
+            <tr><td><span class="param-name">semestre</span><span class="param-type">string</span></td><td>Nombre del semestre <span class="required-badge">* requerido</span></td></tr>
+          </table>
+          <pre class="example-block">GET /api/docente/alumnos?clave_materia=MAT101&semestre=2024-1</pre>
+        </div>
+      </div>
+
+      <div class="ep-row post">
+        <div class="ep-summary" onclick="toggleEp(this)">
+          <span class="method-label">POST</span>
+          <span class="ep-path">/docente/calificaciones</span>
+          <span class="ep-desc">Asignar calificación (solo materias asignadas)</span>
+          <span class="ep-chevron">▶</span>
+        </div>
+        <div class="ep-body">
+          <div class="auth-required">🔒 Requiere sesión de docente</div>
+          <pre class="example-block">{ "matricula": "A010", "clave_materia": "MAT101", "semestre": "2024-1", "calificacion": 9.0 }</pre>
+        </div>
+      </div>
+
+      <div class="ep-row put">
+        <div class="ep-summary" onclick="toggleEp(this)">
+          <span class="method-label">PUT</span>
+          <span class="ep-path">/docente/calificaciones</span>
+          <span class="ep-desc">Editar calificación (solo materias asignadas)</span>
+          <span class="ep-chevron">▶</span>
+        </div>
+        <div class="ep-body">
+          <div class="auth-required">🔒 Requiere sesión de docente</div>
+          <pre class="example-block">{ "matricula": "A010", "clave_materia": "MAT101", "semestre": "2024-1", "calificacion": 9.5 }</pre>
+        </div>
+      </div>
+
+      <div class="ep-row delete">
+        <div class="ep-summary" onclick="toggleEp(this)">
+          <span class="method-label">DELETE</span>
+          <span class="ep-path">/docente/calificaciones</span>
+          <span class="ep-desc">Eliminar calificación (solo materias asignadas)</span>
+          <span class="ep-chevron">▶</span>
+        </div>
+        <div class="ep-body">
+          <div class="auth-required">🔒 Requiere sesión de docente</div>
+          <pre class="example-block">{ "matricula": "A010", "clave_materia": "MAT101", "semestre": "2024-1" }</pre>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+
+<script>
+  function toggleTag(header) {
+    var body    = header.nextElementSibling;
+    var chevron = header.querySelector('.tag-chevron');
+    body.classList.toggle('open');
+    chevron.classList.toggle('open');
+  }
+
+  function toggleEp(summary) {
+    var body    = summary.nextElementSibling;
+    var chevron = summary.querySelector('.ep-chevron');
+    body.classList.toggle('open');
+    chevron.classList.toggle('open');
+  }
+</script>
+</body>
+</html>

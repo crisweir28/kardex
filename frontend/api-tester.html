@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Kardex API Tester</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Syne:wght@400;600;800&display=swap');
+
+  :root {
+    --bg: #0d0d0f;
+    --surface: #16161a;
+    --surface2: #1e1e24;
+    --border: #2a2a35;
+    --accent: #7c5cfc;
+    --accent2: #00e5a0;
+    --danger: #ff4d6a;
+    --warning: #ffb347;
+    --text: #e8e8f0;
+    --muted: #6b6b80;
+    --get: #00e5a0;
+    --post: #7c5cfc;
+    --put: #ffb347;
+    --delete: #ff4d6a;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Syne', sans-serif;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  header {
+    padding: 12px 24px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    background: var(--surface);
+  }
+
+  header h1 { font-size: 18px; font-weight: 800; letter-spacing: -0.5px; }
+  header h1 span { color: var(--accent); }
+
+  .status-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--accent2); box-shadow: 0 0 8px var(--accent2);
+    animation: pulse 2s infinite;
+  }
+
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+
+  .server-url {
+    font-family: 'JetBrains Mono', monospace; font-size: 12px;
+    color: var(--muted); background: var(--bg);
+    padding: 4px 10px; border-radius: 6px; border: 1px solid var(--border);
+  }
+
+  .main { display: grid; grid-template-columns: 280px 1fr 1fr; flex: 1; overflow: hidden; }
+
+  .sidebar { border-right: 1px solid var(--border); overflow-y: auto; background: var(--surface); }
+  .sidebar-section { padding: 12px 0; border-bottom: 1px solid var(--border); }
+  .sidebar-title {
+    font-size: 10px; font-weight: 700; letter-spacing: 1.5px;
+    color: var(--muted); padding: 0 16px 8px; text-transform: uppercase;
+  }
+
+  .endpoint-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px 16px; cursor: pointer;
+    transition: background 0.15s; border-left: 2px solid transparent;
+  }
+  .endpoint-item:hover { background: var(--surface2); }
+  .endpoint-item.active { background: var(--surface2); border-left-color: var(--accent); }
+
+  .method-badge {
+    font-family: 'JetBrains Mono', monospace; font-size: 9px; font-weight: 700;
+    padding: 2px 6px; border-radius: 4px; min-width: 44px; text-align: center;
+  }
+  .m-get    { background: rgba(0,229,160,.15); color: var(--get); }
+  .m-post   { background: rgba(124,92,252,.15); color: var(--post); }
+  .m-put    { background: rgba(255,179,71,.15); color: var(--put); }
+  .m-delete { background: rgba(255,77,106,.15); color: var(--delete); }
+
+  .endpoint-path {
+    font-family: 'JetBrains Mono', monospace; font-size: 11px;
+    color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+
+  .request-panel { border-right: 1px solid var(--border); display: flex; flex-direction: column; overflow: hidden; }
+
+  .panel-header {
+    padding: 16px 20px; border-bottom: 1px solid var(--border);
+    font-size: 11px; font-weight: 700; letter-spacing: 1px; color: var(--muted); text-transform: uppercase;
+  }
+
+  .url-bar {
+    display: flex; gap: 8px; padding: 16px 20px;
+    border-bottom: 1px solid var(--border); align-items: center;
+  }
+
+  .method-select {
+    background: var(--surface2); border: 1px solid var(--border);
+    color: var(--accent2); font-family: 'JetBrains Mono', monospace;
+    font-size: 12px; font-weight: 700; padding: 8px 12px; border-radius: 8px; cursor: pointer; outline: none;
+  }
+
+  .url-input {
+    flex: 1; background: var(--surface2); border: 1px solid var(--border);
+    color: var(--text); font-family: 'JetBrains Mono', monospace;
+    font-size: 12px; padding: 8px 14px; border-radius: 8px; outline: none; transition: border-color .2s;
+  }
+  .url-input:focus { border-color: var(--accent); }
+
+  .send-btn {
+    background: var(--accent); color: white; border: none;
+    padding: 8px 20px; border-radius: 8px; font-family: 'Syne', sans-serif;
+    font-size: 13px; font-weight: 700; cursor: pointer; transition: all .2s; white-space: nowrap;
+  }
+  .send-btn:hover { background: #6a4ae0; transform: translateY(-1px); }
+
+  .tabs { display: flex; border-bottom: 1px solid var(--border); padding: 0 20px; }
+  .tab {
+    padding: 10px 16px; font-size: 12px; font-weight: 600;
+    color: var(--muted); cursor: pointer; border-bottom: 2px solid transparent; transition: all .2s;
+  }
+  .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+  .tab:hover { color: var(--text); }
+
+  .tab-content { flex: 1; overflow-y: auto; padding: 16px 20px; }
+  .tab-pane { display: none; }
+  .tab-pane.active { display: block; }
+
+  textarea.body-input {
+    width: 100%; height: 100%; min-height: 200px;
+    background: var(--surface2); border: 1px solid var(--border);
+    color: var(--text); font-family: 'JetBrains Mono', monospace;
+    font-size: 12px; padding: 14px; border-radius: 8px; resize: none; outline: none; line-height: 1.6;
+  }
+  textarea.body-input:focus { border-color: var(--accent); }
+
+  .auth-row { display: flex; gap: 10px; margin-bottom: 10px; align-items: center; }
+  .auth-label { font-size: 12px; color: var(--muted); min-width: 80px; font-family: 'JetBrains Mono', monospace; }
+  .auth-input {
+    flex: 1; background: var(--surface2); border: 1px solid var(--border);
+    color: var(--text); font-family: 'JetBrains Mono', monospace;
+    font-size: 12px; padding: 7px 12px; border-radius: 6px; outline: none;
+  }
+  .auth-input:focus { border-color: var(--accent); }
+
+  .auth-btn {
+    background: var(--surface2); border: 1px solid var(--accent);
+    color: var(--accent); padding: 7px 16px; border-radius: 6px;
+    font-family: 'Syne', sans-serif; font-size: 12px; font-weight: 700;
+    cursor: pointer; transition: all .2s; white-space: nowrap;
+  }
+  .auth-btn:hover { background: var(--accent); color: white; }
+
+  .session-status {
+    font-family: 'JetBrains Mono', monospace; font-size: 11px;
+    padding: 8px 14px; border-radius: 6px; margin-top: 12px;
+  }
+  .session-ok  { background: rgba(0,229,160,.1); color: var(--accent2); border: 1px solid rgba(0,229,160,.3); }
+  .session-off { background: rgba(255,77,106,.1); color: var(--danger); border: 1px solid rgba(255,77,106,.3); }
+
+  .response-panel { display: flex; flex-direction: column; overflow: hidden; }
+
+  .response-meta {
+    display: flex; align-items: center; gap: 16px;
+    padding: 16px 20px; border-bottom: 1px solid var(--border);
+  }
+
+  .status-code {
+    font-family: 'JetBrains Mono', monospace; font-size: 14px;
+    font-weight: 700; padding: 4px 10px; border-radius: 6px;
+  }
+  .s-2xx { background: rgba(0,229,160,.15); color: var(--accent2); }
+  .s-4xx { background: rgba(255,179,71,.15); color: var(--warning); }
+  .s-5xx { background: rgba(255,77,106,.15); color: var(--danger); }
+
+  .response-time { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--muted); }
+  .response-body { flex: 1; overflow-y: auto; padding: 16px 20px; }
+
+  pre.json-output {
+    font-family: 'JetBrains Mono', monospace; font-size: 12px;
+    line-height: 1.7; white-space: pre-wrap; word-break: break-all; color: var(--text);
+  }
+  .json-key    { color: #7c5cfc; }
+  .json-string { color: #00e5a0; }
+  .json-number { color: #ffb347; }
+  .json-bool   { color: #ff4d6a; }
+  .json-null   { color: var(--muted); }
+
+  .empty-state {
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center; height: 100%; color: var(--muted); gap: 12px;
+  }
+  .empty-state .icon { font-size: 48px; opacity: .3; }
+  .empty-state p { font-size: 13px; }
+
+  .loading-bar {
+    height: 2px; background: linear-gradient(90deg, var(--accent), var(--accent2));
+    width: 0%; transition: width .3s; position: absolute; top: 0; left: 0;
+  }
+
+  .copy-btn {
+    margin-left: auto; background: transparent; border: 1px solid var(--border);
+    color: var(--muted); padding: 4px 10px; border-radius: 5px; font-size: 11px;
+    cursor: pointer; font-family: 'Syne', sans-serif; transition: all .2s;
+  }
+  .copy-btn:hover { border-color: var(--accent2); color: var(--accent2); }
+
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="status-dot"></div>
+  <h1>Kardex <span>API</span> Tester</h1>
+  <div class="server-url" id="server-display">http://localhost:3000</div>
+</header>
+
+<div class="main">
+
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="sidebar-section">
+      <div class="sidebar-title">🔐 Auth</div>
+      <div class="endpoint-item" id="ep-login-alumno">
+        <span class="method-badge m-post">POST</span>
+        <span class="endpoint-path">/auth/login</span>
+      </div>
+      <div class="endpoint-item" id="ep-login-admin">
+        <span class="method-badge m-post">POST</span>
+        <span class="endpoint-path">/auth/admin/login</span>
+      </div>
+      <div class="endpoint-item" id="ep-login-docente">
+        <span class="method-badge m-post">POST</span>
+        <span class="endpoint-path">/auth/docente/login</span>
+      </div>
+      <div class="endpoint-item" id="ep-logout">
+        <span class="method-badge m-post">POST</span>
+        <span class="endpoint-path">/auth/logout</span>
+      </div>
+    </div>
+
+    <div class="sidebar-section">
+      <div class="sidebar-title">📋 Kardex</div>
+      <div class="endpoint-item" id="ep-kardex">
+        <span class="method-badge m-get">GET</span>
+        <span class="endpoint-path">/kardex</span>
+      </div>
+    </div>
+
+    <div class="sidebar-section">
+      <div class="sidebar-title">👨‍🎓 Admin — Alumnos</div>
+      <div class="endpoint-item" id="ep-get-alumnos">
+        <span class="method-badge m-get">GET</span>
+        <span class="endpoint-path">/admin/alumnos</span>
+      </div>
+      <div class="endpoint-item" id="ep-post-alumnos">
+        <span class="method-badge m-post">POST</span>
+        <span class="endpoint-path">/admin/alumnos</span>
+      </div>
+      <div class="endpoint-item" id="ep-delete-alumno">
+        <span class="method-badge m-delete">DEL</span>
+        <span class="endpoint-path">/admin/alumnos/:id</span>
+      </div>
+    </div>
+
+    <div class="sidebar-section">
+      <div class="sidebar-title">📚 Admin — Materias</div>
+      <div class="endpoint-item" id="ep-get-materias">
+        <span class="method-badge m-get">GET</span>
+        <span class="endpoint-path">/admin/materias</span>
+      </div>
+      <div class="endpoint-item" id="ep-post-materias">
+        <span class="method-badge m-post">POST</span>
+        <span class="endpoint-path">/admin/materias</span>
+      </div>
+    </div>
+
+    <div class="sidebar-section">
+      <div class="sidebar-title">🗓 Admin — Semestres</div>
+      <div class="endpoint-item" id="ep-get-semestres">
+        <span class="method-badge m-get">GET</span>
+        <span class="endpoint-path">/admin/semestres</span>
+      </div>
+      <div class="endpoint-item" id="ep-post-semestres">
+        <span class="method-badge m-post">POST</span>
+        <span class="endpoint-path">/admin/semestres</span>
+      </div>
+    </div>
+
+    <div class="sidebar-section">
+      <div class="sidebar-title">👨‍🏫 Admin — Docentes</div>
+      <div class="endpoint-item" id="ep-get-docentes">
+        <span class="method-badge m-get">GET</span>
+        <span class="endpoint-path">/admin/docentes</span>
+      </div>
+      <div class="endpoint-item" id="ep-asignar-docente">
+        <span class="method-badge m-post">POST</span>
+        <span class="endpoint-path">/admin/docentes/asignar</span>
+      </div>
+      <div class="endpoint-item" id="ep-get-materia-docente">
+        <span class="method-badge m-get">GET</span>
+        <span class="endpoint-path">/admin/materias_docente</span>
+      </div>
+    </div>
+
+    <div class="sidebar-section">
+      <div class="sidebar-title">📝 Admin — Calificaciones</div>
+      <div class="endpoint-item" id="ep-post-calif">
+        <span class="method-badge m-post">POST</span>
+        <span class="endpoint-path">/admin/calificaciones</span>
+      </div>
+      <div class="endpoint-item" id="ep-bulk-calif">
+        <span class="method-badge m-post">POST</span>
+        <span class="endpoint-path">/admin/calificaciones/bulk</span>
+      </div>
+      <div class="endpoint-item" id="ep-put-calif">
+        <span class="method-badge m-put">PUT</span>
+        <span class="endpoint-path">/admin/calificaciones</span>
+      </div>
+      <div class="endpoint-item" id="ep-delete-calif">
+        <span class="method-badge m-delete">DEL</span>
+        <span class="endpoint-path">/admin/calificaciones</span>
+      </div>
+    </div>
+
+    <div class="sidebar-section">
+      <div class="sidebar-title">🍎 Docente</div>
+      <div class="endpoint-item" id="ep-doc-materias">
+        <span class="method-badge m-get">GET</span>
+        <span class="endpoint-path">/docente/materias</span>
+      </div>
+      <div class="endpoint-item" id="ep-doc-alumnos">
+        <span class="method-badge m-get">GET</span>
+        <span class="endpoint-path">/docente/alumnos</span>
+      </div>
+      <div class="endpoint-item" id="ep-doc-calif">
+        <span class="method-badge m-post">POST</span>
+        <span class="endpoint-path">/docente/calificaciones</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- REQUEST PANEL -->
+  <div class="request-panel">
+    <div class="panel-header">⬆ Request</div>
+
+    <div class="url-bar">
+      <select class="method-select" id="req-method">
+        <option>GET</option><option>POST</option><option>PUT</option><option>DELETE</option>
+      </select>
+      <input class="url-input" id="req-url" value="http://localhost:3000/api/kardex">
+      <button class="send-btn" id="send-btn" onclick="sendRequest()">▶ Enviar</button>
+    </div>
+
+    <div class="tabs">
+      <div class="tab active" id="tab-body" onclick="switchTab('body')">Body</div>
+      <div class="tab" id="tab-auth" onclick="switchTab('auth')">Auth / Sesión</div>
+    </div>
+
+    <div class="tab-content">
+      <div class="tab-pane active" id="pane-body">
+        <textarea class="body-input" id="req-body" placeholder='{"key": "value"}'></textarea>
+      </div>
+      <div class="tab-pane" id="pane-auth">
+        <p style="font-size:12px;color:var(--muted);margin-bottom:14px">
+          La cookie de sesión se mantiene automáticamente entre requests.
+        </p>
+        <div class="auth-row">
+          <span class="auth-label">Servidor</span>
+          <input class="auth-input" id="server-url" value="http://localhost:3000">
+          <button class="auth-btn" onclick="updateServer()">Actualizar</button>
+        </div>
+        <div class="auth-row">
+          <span class="auth-label">Alumno</span>
+          <input class="auth-input" id="auth-mat" value="A010">
+          <input class="auth-input" id="auth-pass" value="pass123" type="password">
+          <button class="auth-btn" onclick="quickLogin('alumno')">Login</button>
+        </div>
+        <div class="auth-row">
+          <span class="auth-label">Admin</span>
+          <input class="auth-input" id="auth-admin-u" value="admin">
+          <input class="auth-input" id="auth-admin-p" value="admin123" type="password">
+          <button class="auth-btn" onclick="quickLogin('admin')">Login</button>
+        </div>
+        <div class="auth-row">
+          <span class="auth-label">Docente</span>
+          <input class="auth-input" id="auth-doc-m" value="D001">
+          <input class="auth-input" id="auth-doc-p" value="pass123" type="password">
+          <button class="auth-btn" onclick="quickLogin('docente')">Login</button>
+        </div>
+        <div id="session-status" class="session-status session-off">● Sin sesión activa</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RESPONSE PANEL -->
+  <div class="response-panel">
+    <div class="panel-header" style="position:relative">
+      ⬇ Response
+      <div class="loading-bar" id="loading-bar"></div>
+    </div>
+    <div class="response-meta" id="response-meta" style="display:none">
+      <span class="status-code" id="res-status"></span>
+      <span class="response-time" id="res-time"></span>
+      <button class="copy-btn" onclick="copyResponse()">Copiar JSON</button>
+    </div>
+    <div class="response-body">
+      <div class="empty-state" id="empty-state">
+        <div class="icon">⚡</div>
+        <p>Selecciona un endpoint y presiona Enviar</p>
+      </div>
+      <pre class="json-output" id="json-output" style="display:none"></pre>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  let BASE = 'http://localhost:3000';
+  let lastResponse = '';
+
+  // ─── Snippets ──────────────────────────────────────────────────────────────
+  const S = {
+    login_alumno:   JSON.stringify({ matricula: 'A010', password: 'pass123' }, null, 2),
+    login_admin:    JSON.stringify({ usuario: 'admin', password: 'admin123' }, null, 2),
+    login_docente:  JSON.stringify({ matricula: 'D001', password: 'pass123' }, null, 2),
+    logout:         '{}',
+    post_alumnos:   JSON.stringify({ matricula: 'A099', nombre: 'Juan', apellidos: 'Perez Lopez', carrera: 'Ingenieria en Sistemas', password: 'pass123' }, null, 2),
+    post_materias:  JSON.stringify({ clave: 'PRG501', nombre: 'Inteligencia Artificial', creditos: 8 }, null, 2),
+    post_semestres: JSON.stringify({ nombre: '2025-1' }, null, 2),
+    asignar_doc:    JSON.stringify({ matricula_docente: 'D001', clave_materia: 'MAT101', semestre: '2024-1' }, null, 2),
+    post_calif:     JSON.stringify({ matricula: 'A010', clave_materia: 'MAT101', semestre: '2024-1', calificacion: 9.5 }, null, 2),
+    bulk_calif:     JSON.stringify({ matricula: 'A010', calificaciones: [{ clave_materia: 'MAT101', semestre: '2024-1', calificacion: 9.5 }, { clave_materia: 'PRG101', semestre: '2024-1', calificacion: 8.0 }] }, null, 2),
+    put_calif:      JSON.stringify({ matricula: 'A010', clave_materia: 'MAT101', semestre: '2024-1', calificacion: 10.0 }, null, 2),
+    delete_calif:   JSON.stringify({ matricula: 'A010', clave_materia: 'MAT101', semestre: '2024-1' }, null, 2),
+    doc_calif:      JSON.stringify({ matricula: 'A010', clave_materia: 'MAT101', semestre: '2024-1', calificacion: 9.0 }, null, 2),
+  };
+
+  // ─── Endpoint map ──────────────────────────────────────────────────────────
+  const EP = {
+    'ep-login-alumno':       { method: 'POST',   path: '/api/auth/login',                snippet: 'login_alumno',  tab: 'auth' },
+    'ep-login-admin':        { method: 'POST',   path: '/api/auth/admin/login',          snippet: 'login_admin',   tab: 'auth' },
+    'ep-login-docente':      { method: 'POST',   path: '/api/auth/docente/login',        snippet: 'login_docente', tab: 'auth' },
+    'ep-logout':             { method: 'POST',   path: '/api/auth/logout',               snippet: 'logout',        tab: 'auth' },
+    'ep-kardex':             { method: 'GET',    path: '/api/kardex',                    snippet: null,            tab: 'body' },
+    'ep-get-alumnos':        { method: 'GET',    path: '/api/admin/alumnos',             snippet: null,            tab: 'body' },
+    'ep-post-alumnos':       { method: 'POST',   path: '/api/admin/alumnos',             snippet: 'post_alumnos',  tab: 'body' },
+    'ep-delete-alumno':      { method: 'DELETE', path: '/api/admin/alumnos/1',           snippet: null,            tab: 'body' },
+    'ep-get-materias':       { method: 'GET',    path: '/api/admin/materias',            snippet: null,            tab: 'body' },
+    'ep-post-materias':      { method: 'POST',   path: '/api/admin/materias',            snippet: 'post_materias', tab: 'body' },
+    'ep-get-semestres':      { method: 'GET',    path: '/api/admin/semestres',           snippet: null,            tab: 'body' },
+    'ep-post-semestres':     { method: 'POST',   path: '/api/admin/semestres',           snippet: 'post_semestres',tab: 'body' },
+    'ep-get-docentes':       { method: 'GET',    path: '/api/admin/docentes',            snippet: null,            tab: 'body' },
+    'ep-asignar-docente':    { method: 'POST',   path: '/api/admin/docentes/asignar',    snippet: 'asignar_doc',   tab: 'body' },
+    'ep-get-materia-docente':{ method: 'GET',    path: '/api/admin/materias_docente',    snippet: null,            tab: 'body' },
+    'ep-post-calif':         { method: 'POST',   path: '/api/admin/calificaciones',      snippet: 'post_calif',    tab: 'body' },
+    'ep-bulk-calif':         { method: 'POST',   path: '/api/admin/calificaciones/bulk', snippet: 'bulk_calif',    tab: 'body' },
+    'ep-put-calif':          { method: 'PUT',    path: '/api/admin/calificaciones',      snippet: 'put_calif',     tab: 'body' },
+    'ep-delete-calif':       { method: 'DELETE', path: '/api/admin/calificaciones',      snippet: 'delete_calif',  tab: 'body' },
+    'ep-doc-materias':       { method: 'GET',    path: '/api/docente/materias',          snippet: null,            tab: 'body' },
+    'ep-doc-alumnos':        { method: 'GET',    path: '/api/docente/alumnos?clave_materia=MAT101&semestre=2024-1', snippet: null, tab: 'body' },
+    'ep-doc-calif':          { method: 'POST',   path: '/api/docente/calificaciones',    snippet: 'doc_calif',     tab: 'body' },
+  };
+
+  // ─── Bind clicks ───────────────────────────────────────────────────────────
+  Object.entries(EP).forEach(function(entry) {
+    var id = entry[0];
+    var ep = entry[1];
+    var el = document.getElementById(id);
+    if (!el) return;
+    el.addEventListener('click', function() {
+      document.querySelectorAll('.endpoint-item').forEach(function(i) { i.classList.remove('active'); });
+      el.classList.add('active');
+      document.getElementById('req-method').value = ep.method;
+      document.getElementById('req-url').value    = BASE + ep.path;
+      document.getElementById('req-body').value   = ep.snippet ? S[ep.snippet] : '';
+      switchTab(ep.tab);
+    });
+  });
+
+  // ─── Helpers ───────────────────────────────────────────────────────────────
+  function updateServer() {
+    BASE = document.getElementById('server-url').value.replace(/\/$/, '');
+    document.getElementById('server-display').textContent = BASE;
+  }
+
+  function switchTab(name) {
+    document.getElementById('tab-body').classList.toggle('active', name === 'body');
+    document.getElementById('tab-auth').classList.toggle('active', name === 'auth');
+    document.getElementById('pane-body').classList.toggle('active', name === 'body');
+    document.getElementById('pane-auth').classList.toggle('active', name === 'auth');
+  }
+
+  function highlightJSON(json) {
+    return json.replace(
+      /("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g,
+      function(match) {
+        if (/^"/.test(match)) {
+          if (/:$/.test(match)) return '<span class="json-key">' + match + '</span>';
+          return '<span class="json-string">' + match + '</span>';
+        }
+        if (/true|false/.test(match)) return '<span class="json-bool">' + match + '</span>';
+        if (/null/.test(match))       return '<span class="json-null">' + match + '</span>';
+        return '<span class="json-number">' + match + '</span>';
+      }
+    );
+  }
+
+  async function sendRequest() {
+    var method  = document.getElementById('req-method').value;
+    var url     = document.getElementById('req-url').value;
+    var bodyTxt = document.getElementById('req-body').value.trim();
+    var bar     = document.getElementById('loading-bar');
+
+    bar.style.width = '60%';
+    var start = Date.now();
+
+    try {
+      var opts = { method: method, credentials: 'include', headers: { 'Content-Type': 'application/json' } };
+      if (bodyTxt && method !== 'GET') opts.body = bodyTxt;
+
+      var res     = await fetch(url, opts);
+      var elapsed = Date.now() - start;
+      var data    = await res.json();
+
+      bar.style.width = '100%';
+      setTimeout(function() { bar.style.width = '0%'; }, 400);
+
+      var sc = document.getElementById('res-status');
+      sc.textContent = res.status + ' ' + res.statusText;
+      sc.className   = 'status-code ' + (res.ok ? 's-2xx' : res.status >= 500 ? 's-5xx' : 's-4xx');
+
+      document.getElementById('res-time').textContent         = elapsed + 'ms';
+      document.getElementById('response-meta').style.display  = 'flex';
+      document.getElementById('empty-state').style.display    = 'none';
+
+      var pretty = JSON.stringify(data, null, 2);
+      lastResponse = pretty;
+      var out = document.getElementById('json-output');
+      out.innerHTML   = highlightJSON(pretty);
+      out.style.display = 'block';
+
+    } catch(e) {
+      bar.style.width = '0%';
+      document.getElementById('empty-state').style.display = 'none';
+      var out2 = document.getElementById('json-output');
+      out2.textContent  = 'Error de conexion: ' + e.message;
+      out2.style.display = 'block';
+    }
+  }
+
+  async function quickLogin(rol) {
+    var url, body;
+    if (rol === 'alumno') {
+      url  = BASE + '/api/auth/login';
+      body = { matricula: document.getElementById('auth-mat').value, password: document.getElementById('auth-pass').value };
+    } else if (rol === 'admin') {
+      url  = BASE + '/api/auth/admin/login';
+      body = { usuario: document.getElementById('auth-admin-u').value, password: document.getElementById('auth-admin-p').value };
+    } else {
+      url  = BASE + '/api/auth/docente/login';
+      body = { matricula: document.getElementById('auth-doc-m').value, password: document.getElementById('auth-doc-p').value };
+    }
+
+    try {
+      var res  = await fetch(url, { method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+      var data = await res.json();
+      var st   = document.getElementById('session-status');
+      if (res.ok) {
+        var user = data.alumno || data.docente || data.admin || {};
+        st.className   = 'session-status session-ok';
+        st.textContent = '● Sesion activa: ' + rol.toUpperCase() + ' - ' + (user.nombre || user.usuario || '');
+      } else {
+        st.className   = 'session-status session-off';
+        st.textContent = '● Login fallido: ' + (data.error || data.message || '');
+      }
+    } catch(e) {
+      document.getElementById('session-status').textContent = '● Error: ' + e.message;
+    }
+  }
+
+  function copyResponse() {
+    navigator.clipboard.writeText(lastResponse).then(function() {
+      var btn = document.querySelector('.copy-btn');
+      btn.textContent = '✓ Copiado';
+      setTimeout(function() { btn.textContent = 'Copiar JSON'; }, 2000);
+    });
+  }
+
+  document.addEventListener('keydown', function(e) {
+    if (e.ctrlKey && e.key === 'Enter') sendRequest();
+  });
+</script>
+</body>
+</html>

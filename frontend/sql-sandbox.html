@@ -1,0 +1,714 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Kardex SQL Sandbox</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,400;0,600;0,700;1,400&family=Space+Grotesk:wght@400;500;700&display=swap');
+
+  :root {
+    --bg: #0f1117;
+    --surface: #161b22;
+    --surface2: #21262d;
+    --border: #30363d;
+    --accent: #f78166;
+    --blue: #58a6ff;
+    --green: #3fb950;
+    --yellow: #d29922;
+    --purple: #bc8cff;
+    --text: #c9d1d9;
+    --muted: #8b949e;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Space Grotesk', sans-serif;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  header {
+    padding: 10px 20px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  header h1 {
+    font-size: 16px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .server-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-left: auto;
+  }
+
+  .server-input {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    padding: 5px 10px;
+    border-radius: 6px;
+    width: 200px;
+    outline: none;
+  }
+
+  .small-btn {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 12px;
+    padding: 5px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .small-btn:hover { border-color: var(--blue); color: var(--blue); }
+
+  .workspace {
+    display: grid;
+    grid-template-columns: 220px 1fr;
+    flex: 1;
+    overflow: hidden;
+  }
+
+  /* SCHEMA PANEL */
+  .schema-panel {
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    overflow-y: auto;
+    font-size: 12px;
+  }
+
+  .schema-header {
+    padding: 12px 14px;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--muted);
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    background: var(--surface);
+  }
+
+  .table-group { border-bottom: 1px solid var(--border); }
+
+  .table-name {
+    padding: 10px 14px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--blue);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    font-weight: 600;
+    transition: background 0.1s;
+    user-select: none;
+  }
+
+  .table-name:hover { background: var(--surface2); }
+  .table-name .arrow { font-size: 9px; transition: transform 0.2s; }
+  .table-name.open .arrow { transform: rotate(90deg); }
+
+  .table-columns {
+    display: none;
+    padding: 0 0 8px 28px;
+  }
+
+  .table-columns.show { display: block; }
+
+  .col-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 3px 0;
+    cursor: pointer;
+    border-radius: 4px;
+    padding-right: 8px;
+  }
+
+  .col-row:hover { background: var(--surface2); }
+
+  .col-name {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--text);
+  }
+
+  .col-type {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+    margin-left: auto;
+  }
+
+  .col-pk { color: var(--yellow); }
+
+  .insert-col-btn {
+    font-size: 10px;
+    background: none;
+    border: none;
+    color: var(--muted);
+    cursor: pointer;
+    padding: 0 4px;
+  }
+
+  .insert-col-btn:hover { color: var(--accent); }
+
+  /* EDITOR AREA */
+  .editor-area {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .snippets-bar {
+    padding: 8px 16px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    background: var(--surface);
+    flex-wrap: nowrap;
+  }
+
+  .snippet-btn {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    padding: 4px 10px;
+    border-radius: 5px;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.15s;
+  }
+
+  .snippet-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+  .editor-wrapper {
+    position: relative;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .line-numbers {
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 44px;
+    padding: 14px 0;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    text-align: right;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--muted);
+    user-select: none;
+    overflow: hidden;
+    line-height: 1.7;
+  }
+
+  .line-num { padding-right: 8px; display: block; }
+
+  textarea#sql-editor {
+    width: 100%;
+    height: 180px;
+    background: var(--bg);
+    border: none;
+    color: var(--text);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    padding: 14px 14px 14px 56px;
+    resize: none;
+    outline: none;
+    line-height: 1.7;
+    tab-size: 2;
+  }
+
+  .run-bar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 16px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .run-btn {
+    background: var(--green);
+    color: #000;
+    border: none;
+    padding: 7px 20px;
+    border-radius: 7px;
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    transition: all 0.2s;
+  }
+
+  .run-btn:hover { background: #4ade80; }
+  .run-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  .clear-btn {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    padding: 7px 14px;
+    border-radius: 7px;
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .clear-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+  .shortcut-hint {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    margin-left: auto;
+  }
+
+  /* RESULTS */
+  .results-panel {
+    flex: 1;
+    overflow: auto;
+    padding: 0;
+  }
+
+  .result-meta {
+    padding: 10px 16px;
+    font-size: 12px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: var(--surface);
+    position: sticky;
+    top: 0;
+  }
+
+  .result-count { color: var(--green); font-weight: 700; }
+  .result-time { color: var(--muted); font-family: 'JetBrains Mono', monospace; }
+  .result-error { color: var(--accent); font-family: 'JetBrains Mono', monospace; font-size: 12px; }
+
+  table.result-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  table.result-table th {
+    background: var(--surface2);
+    color: var(--muted);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    padding: 10px 14px;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 41px;
+    white-space: nowrap;
+  }
+
+  table.result-table td {
+    padding: 8px 14px;
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+    max-width: 300px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: var(--text);
+  }
+
+  table.result-table tr:hover td { background: var(--surface2); }
+
+  .null-val { color: var(--muted); font-style: italic; }
+  .num-val { color: var(--yellow); }
+  .str-val { color: var(--green); }
+
+  .empty-result {
+    padding: 40px;
+    text-align: center;
+    color: var(--muted);
+    font-size: 13px;
+  }
+
+  .empty-result .icon { font-size: 36px; opacity: 0.4; display: block; margin-bottom: 10px; }
+
+  ::-webkit-scrollbar { width: 5px; height: 5px; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🔬 Kardex SQL Sandbox</h1>
+  <div class="server-row">
+    <input class="server-input" id="server-url" value="http://localhost:3000" placeholder="API server">
+    <button class="small-btn" onclick="loginAdmin()">🔐 Auth Admin</button>
+    <span id="auth-badge" style="font-size:11px; color:var(--muted); font-family:'JetBrains Mono',monospace;">sin sesión</span>
+  </div>
+</header>
+
+<div class="workspace">
+
+  <!-- SCHEMA -->
+  <div class="schema-panel">
+    <div class="schema-header">📦 Esquema · kardex_db</div>
+
+    <div class="table-group">
+      <div class="table-name" onclick="toggleTable(this, 'cols-alumnos')">
+        <span class="arrow">▶</span> alumnos
+      </div>
+      <div class="table-columns" id="cols-alumnos">
+        <div class="col-row" onclick="insertField('id')"><span class="col-name col-pk">🔑 id</span><span class="col-type">INT</span></div>
+        <div class="col-row" onclick="insertField('matricula')"><span class="col-name">matricula</span><span class="col-type">VARCHAR</span></div>
+        <div class="col-row" onclick="insertField('nombre')"><span class="col-name">nombre</span><span class="col-type">VARCHAR</span></div>
+        <div class="col-row" onclick="insertField('apellidos')"><span class="col-name">apellidos</span><span class="col-type">VARCHAR</span></div>
+        <div class="col-row" onclick="insertField('carrera')"><span class="col-name">carrera</span><span class="col-type">VARCHAR</span></div>
+        <div class="col-row" onclick="insertField('password_hash')"><span class="col-name">password_hash</span><span class="col-type">VARCHAR</span></div>
+      </div>
+    </div>
+
+    <div class="table-group">
+      <div class="table-name" onclick="toggleTable(this, 'cols-materias')">
+        <span class="arrow">▶</span> materias
+      </div>
+      <div class="table-columns" id="cols-materias">
+        <div class="col-row" onclick="insertField('id')"><span class="col-name col-pk">🔑 id</span><span class="col-type">INT</span></div>
+        <div class="col-row" onclick="insertField('clave')"><span class="col-name">clave</span><span class="col-type">VARCHAR</span></div>
+        <div class="col-row" onclick="insertField('nombre')"><span class="col-name">nombre</span><span class="col-type">VARCHAR</span></div>
+        <div class="col-row" onclick="insertField('creditos')"><span class="col-name">creditos</span><span class="col-type">INT</span></div>
+      </div>
+    </div>
+
+    <div class="table-group">
+      <div class="table-name" onclick="toggleTable(this, 'cols-calificaciones')">
+        <span class="arrow">▶</span> calificaciones
+      </div>
+      <div class="table-columns" id="cols-calificaciones">
+        <div class="col-row" onclick="insertField('id')"><span class="col-name col-pk">🔑 id</span><span class="col-type">INT</span></div>
+        <div class="col-row" onclick="insertField('alumno_id')"><span class="col-name">alumno_id</span><span class="col-type">INT FK</span></div>
+        <div class="col-row" onclick="insertField('materia_id')"><span class="col-name">materia_id</span><span class="col-type">INT FK</span></div>
+        <div class="col-row" onclick="insertField('semestre_id')"><span class="col-name">semestre_id</span><span class="col-type">INT FK</span></div>
+        <div class="col-row" onclick="insertField('calificacion')"><span class="col-name">calificacion</span><span class="col-type">DECIMAL</span></div>
+      </div>
+    </div>
+
+    <div class="table-group">
+      <div class="table-name" onclick="toggleTable(this, 'cols-docentes')">
+        <span class="arrow">▶</span> docentes
+      </div>
+      <div class="table-columns" id="cols-docentes">
+        <div class="col-row" onclick="insertField('id')"><span class="col-name col-pk">🔑 id</span><span class="col-type">INT</span></div>
+        <div class="col-row" onclick="insertField('matricula')"><span class="col-name">matricula</span><span class="col-type">VARCHAR</span></div>
+        <div class="col-row" onclick="insertField('nombre')"><span class="col-name">nombre</span><span class="col-type">VARCHAR</span></div>
+        <div class="col-row" onclick="insertField('apellidos')"><span class="col-name">apellidos</span><span class="col-type">VARCHAR</span></div>
+        <div class="col-row" onclick="insertField('email')"><span class="col-name">email</span><span class="col-type">VARCHAR</span></div>
+      </div>
+    </div>
+
+    <div class="table-group">
+      <div class="table-name" onclick="toggleTable(this, 'cols-semestres')">
+        <span class="arrow">▶</span> semestres
+      </div>
+      <div class="table-columns" id="cols-semestres">
+        <div class="col-row" onclick="insertField('id')"><span class="col-name col-pk">🔑 id</span><span class="col-type">INT</span></div>
+        <div class="col-row" onclick="insertField('nombre')"><span class="col-name">nombre</span><span class="col-type">VARCHAR</span></div>
+      </div>
+    </div>
+
+    <div class="table-group">
+      <div class="table-name" onclick="toggleTable(this, 'cols-carreras')">
+        <span class="arrow">▶</span> carreras
+      </div>
+      <div class="table-columns" id="cols-carreras">
+        <div class="col-row" onclick="insertField('id')"><span class="col-name col-pk">🔑 id</span><span class="col-type">INT</span></div>
+        <div class="col-row" onclick="insertField('clave')"><span class="col-name">clave</span><span class="col-type">VARCHAR</span></div>
+        <div class="col-row" onclick="insertField('nombre')"><span class="col-name">nombre</span><span class="col-type">VARCHAR</span></div>
+        <div class="col-row" onclick="insertField('facultad')"><span class="col-name">facultad</span><span class="col-type">VARCHAR</span></div>
+      </div>
+    </div>
+
+    <div class="table-group">
+      <div class="table-name" onclick="toggleTable(this, 'cols-views')">
+        <span class="arrow">▶</span> 👁 Vistas
+      </div>
+      <div class="table-columns" id="cols-views">
+        <div class="col-row" onclick="insertSnippet('SELECT * FROM vista_kardex WHERE alumno_id = 1;')"><span class="col-name" style="color:var(--purple)">vista_kardex</span></div>
+        <div class="col-row" onclick="insertSnippet('SELECT * FROM vista_alumnos;')"><span class="col-name" style="color:var(--purple)">vista_alumnos</span></div>
+        <div class="col-row" onclick="insertSnippet('SELECT * FROM vista_materias;')"><span class="col-name" style="color:var(--purple)">vista_materias</span></div>
+        <div class="col-row" onclick="insertSnippet('SELECT * FROM vista_calificaciones;')"><span class="col-name" style="color:var(--purple)">vista_calificaciones</span></div>
+        <div class="col-row" onclick="insertSnippet('SELECT * FROM vista_materia_docente;')"><span class="col-name" style="color:var(--purple)">vista_materia_docente</span></div>
+        <div class="col-row" onclick="insertSnippet('SELECT * FROM vista_docentes;')"><span class="col-name" style="color:var(--purple)">vista_docentes</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- EDITOR -->
+  <div class="editor-area">
+    <div class="snippets-bar">
+      <button class="snippet-btn" onclick="insertSnippet('SELECT * FROM alumnos LIMIT 20;')">alumnos</button>
+      <button class="snippet-btn" onclick="insertSnippet('SELECT * FROM materias;')">materias</button>
+      <button class="snippet-btn" onclick="insertSnippet('SELECT * FROM semestres;')">semestres</button>
+      <button class="snippet-btn" onclick="insertSnippet('SELECT * FROM calificaciones LIMIT 50;')">calificaciones</button>
+      <button class="snippet-btn" onclick="insertSnippet('SELECT * FROM docentes;')">docentes</button>
+      <button class="snippet-btn" onclick="insertSnippet('SELECT a.matricula, a.nombre, a.apellidos, COUNT(c.id) as materias, AVG(c.calificacion) as promedio\nFROM alumnos a\nLEFT JOIN calificaciones c ON c.alumno_id = a.id\nGROUP BY a.id\nORDER BY promedio DESC;')">📊 Ranking alumnos</button>
+      <button class="snippet-btn" onclick="insertSnippet('SELECT m.clave, m.nombre, AVG(c.calificacion) as promedio, COUNT(c.id) as total\nFROM materias m\nLEFT JOIN calificaciones c ON c.materia_id = m.id\nGROUP BY m.id\nORDER BY promedio ASC;')">📉 Promedio x materia</button>
+      <button class="snippet-btn" onclick="insertSnippet('SELECT a.matricula, a.nombre, m.nombre as materia, c.calificacion\nFROM calificaciones c\nJOIN alumnos a ON a.id = c.alumno_id\nJOIN materias m ON m.id = c.materia_id\nWHERE c.calificacion < 6\nORDER BY c.calificacion ASC;')">⚠️ Reprobados</button>
+      <button class="snippet-btn" onclick="insertSnippet('SELECT s.nombre as semestre, COUNT(c.id) as calificaciones, AVG(c.calificacion) as promedio\nFROM semestres s\nLEFT JOIN calificaciones c ON c.semestre_id = s.id\nGROUP BY s.id\nORDER BY s.nombre;')">📅 Por semestre</button>
+      <button class="snippet-btn" onclick="insertSnippet('SHOW TABLES;')">SHOW TABLES</button>
+      <button class="snippet-btn" onclick="insertSnippet('DESCRIBE alumnos;')">DESCRIBE</button>
+    </div>
+
+    <div class="editor-wrapper">
+      <div class="line-numbers" id="line-numbers">
+        <span class="line-num">1</span>
+      </div>
+      <textarea id="sql-editor" spellcheck="false"
+        placeholder="-- Escribe tu query SQL aquí&#10;-- Ctrl+Enter para ejecutar&#10;SELECT * FROM alumnos LIMIT 10;"
+        oninput="updateLineNumbers()"
+        onkeydown="handleKey(event)">SELECT * FROM alumnos LIMIT 10;</textarea>
+    </div>
+
+    <div class="run-bar">
+      <button class="run-btn" id="run-btn" onclick="runQuery()">▶ Ejecutar</button>
+      <button class="clear-btn" onclick="clearEditor()">✕ Limpiar</button>
+      <span class="shortcut-hint">Ctrl+Enter para ejecutar</span>
+      <button class="clear-btn" style="margin-left:auto" onclick="exportCSV()">⬇ CSV</button>
+    </div>
+
+    <div class="results-panel" id="results-panel">
+      <div class="empty-result">
+        <span class="icon">🔬</span>
+        Escribe una query y presiona Ejecutar
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  let BASE = 'http://localhost:3000';
+  let lastResults = [];
+
+  // ── Line numbers ──────────────────────────────────────────────────────────
+  function updateLineNumbers() {
+    const editor = document.getElementById('sql-editor');
+    const lines = editor.value.split('\n').length;
+    const ln = document.getElementById('line-numbers');
+    ln.innerHTML = Array.from({length: lines}, (_, i) =>
+      `<span class="line-num">${i+1}</span>`
+    ).join('');
+    ln.scrollTop = editor.scrollTop;
+  }
+
+  document.getElementById('sql-editor').addEventListener('scroll', () => {
+    document.getElementById('line-numbers').scrollTop =
+      document.getElementById('sql-editor').scrollTop;
+  });
+
+  function handleKey(e) {
+    if (e.ctrlKey && e.key === 'Enter') { e.preventDefault(); runQuery(); }
+    if (e.key === 'Tab') {
+      e.preventDefault();
+      const el = e.target;
+      const s = el.selectionStart;
+      el.value = el.value.substring(0, s) + '  ' + el.value.substring(el.selectionEnd);
+      el.selectionStart = el.selectionEnd = s + 2;
+      updateLineNumbers();
+    }
+  }
+
+  // ── Snippets / schema ─────────────────────────────────────────────────────
+  function insertSnippet(sql) {
+    document.getElementById('sql-editor').value = sql;
+    updateLineNumbers();
+  }
+
+  function insertField(field) {
+    const el = document.getElementById('sql-editor');
+    const pos = el.selectionStart;
+    const val = el.value;
+    el.value = val.substring(0, pos) + field + val.substring(pos);
+    el.selectionStart = el.selectionEnd = pos + field.length;
+    el.focus();
+    updateLineNumbers();
+  }
+
+  function toggleTable(el, id) {
+    el.classList.toggle('open');
+    document.getElementById(id).classList.toggle('show');
+  }
+
+  function clearEditor() {
+    document.getElementById('sql-editor').value = '';
+    updateLineNumbers();
+    document.getElementById('results-panel').innerHTML =
+      '<div class="empty-result"><span class="icon">🔬</span>Escribe una query y presiona Ejecutar</div>';
+  }
+
+  // ── Auth ──────────────────────────────────────────────────────────────────
+  async function loginAdmin() {
+    try {
+      const res = await fetch(BASE + '/api/auth/admin/login', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ usuario: 'admin', password: 'admin123' })
+      });
+      const badge = document.getElementById('auth-badge');
+      if (res.ok) {
+        badge.textContent = '✓ admin';
+        badge.style.color = 'var(--green)';
+      } else {
+        badge.textContent = '✗ error';
+        badge.style.color = 'var(--accent)';
+      }
+    } catch(e) {
+      document.getElementById('auth-badge').textContent = '✗ ' + e.message;
+    }
+  }
+
+  // ── Run query ─────────────────────────────────────────────────────────────
+  async function runQuery() {
+    const sql = document.getElementById('sql-editor').value.trim();
+    if (!sql) return;
+
+    const btn = document.getElementById('run-btn');
+    btn.disabled = true;
+    btn.textContent = '⏳ Ejecutando...';
+
+    const start = Date.now();
+    try {
+      const res = await fetch(BASE + '/api/admin/query', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sql })
+      });
+
+      const elapsed = Date.now() - start;
+      const data = await res.json();
+
+      if (!res.ok) {
+        renderError(data.error || data.message || 'Error desconocido', elapsed);
+      } else {
+        renderResults(data, elapsed);
+      }
+    } catch(e) {
+      renderError(e.message, Date.now() - start);
+    } finally {
+      btn.disabled = false;
+      btn.textContent = '▶ Ejecutar';
+    }
+  }
+
+  function renderResults(data, ms) {
+    lastResults = data;
+    const panel = document.getElementById('results-panel');
+
+    if (!data || data.length === 0) {
+      panel.innerHTML = `
+        <div class="result-meta">
+          <span class="result-count">0 filas</span>
+          <span class="result-time">${ms}ms</span>
+        </div>
+        <div class="empty-result"><span class="icon">📭</span>Query ejecutada — sin resultados</div>
+      `;
+      return;
+    }
+
+    // affectedRows for INSERT/UPDATE/DELETE
+    if (typeof data.affectedRows !== 'undefined') {
+      panel.innerHTML = `
+        <div class="result-meta">
+          <span class="result-count">✓ ${data.affectedRows} filas afectadas</span>
+          <span class="result-time">${ms}ms</span>
+        </div>
+        <div class="empty-result"><span class="icon">✅</span>Operación completada</div>
+      `;
+      return;
+    }
+
+    const cols = Object.keys(data[0]);
+
+    const headers = cols.map(c => `<th>${c}</th>`).join('');
+    const rows = data.map(row =>
+      '<tr>' + cols.map(c => {
+        const v = row[c];
+        if (v === null) return `<td><span class="null-val">NULL</span></td>`;
+        if (typeof v === 'number') return `<td><span class="num-val">${v}</span></td>`;
+        return `<td><span class="str-val">${String(v).substring(0, 200)}</span></td>`;
+      }).join('') + '</tr>'
+    ).join('');
+
+    panel.innerHTML = `
+      <div class="result-meta">
+        <span class="result-count">${data.length} filas</span>
+        <span class="result-time">${ms}ms · ${cols.length} columnas</span>
+      </div>
+      <table class="result-table">
+        <thead><tr>${headers}</tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    `;
+  }
+
+  function renderError(msg, ms) {
+    document.getElementById('results-panel').innerHTML = `
+      <div class="result-meta">
+        <span style="color:var(--accent); font-weight:700;">✗ Error</span>
+        <span class="result-time">${ms}ms</span>
+      </div>
+      <div class="empty-result">
+        <span class="icon">❌</span>
+        <span class="result-error">${msg}</span>
+      </div>
+    `;
+  }
+
+  function exportCSV() {
+    if (!lastResults || !lastResults.length) return;
+    const cols = Object.keys(lastResults[0]);
+    const csv = [cols.join(','), ...lastResults.map(r =>
+      cols.map(c => JSON.stringify(r[c] ?? '')).join(',')
+    )].join('\n');
+    const a = document.createElement('a');
+    a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
+    a.download = 'kardex_query.csv';
+    a.click();
+  }
+
+  updateLineNumbers();
+</script>
+</body>
+</html>

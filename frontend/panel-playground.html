@@ -1,0 +1,1023 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Kardex · Panel de Pruebas</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap');
+
+  :root {
+    --bg: #f4f2ef;
+    --white: #ffffff;
+    --border: #e0dbd4;
+    --text: #1c1917;
+    --muted: #78716c;
+    --accent: #dc2626;
+    --accent2: #16a34a;
+    --blue: #2563eb;
+    --amber: #d97706;
+    --sidebar: #1c1917;
+    --tag-bg: #fef9c3;
+    --tag-color: #854d0e;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Outfit', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+  }
+
+  /* ── SIDEBAR ── */
+  aside {
+    width: 240px;
+    min-width: 240px;
+    background: var(--sidebar);
+    color: #fff;
+    height: 100vh;
+    position: sticky;
+    top: 0;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .brand {
+    padding: 24px 20px 20px;
+    border-bottom: 1px solid #2c2825;
+  }
+
+  .brand h1 {
+    font-size: 20px;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+  }
+
+  .brand h1 span { color: var(--accent); }
+
+  .brand p {
+    font-size: 11px;
+    color: #6b6560;
+    margin-top: 3px;
+    font-weight: 500;
+  }
+
+  .session-box {
+    margin: 14px 16px;
+    background: #2c2825;
+    border-radius: 8px;
+    padding: 10px 12px;
+    font-size: 11px;
+    color: #a09890;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .session-box .label { color: #6b6560; margin-bottom: 4px; font-size: 10px; }
+  .session-active { color: #4ade80 !important; }
+  .session-badge { font-weight: 700; }
+
+  nav {
+    flex: 1;
+    padding: 8px 0;
+  }
+
+  .nav-group-title {
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: #4a4540;
+    padding: 14px 20px 4px;
+  }
+
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 20px;
+    cursor: pointer;
+    color: #a09890;
+    font-size: 13px;
+    font-weight: 500;
+    border-left: 2px solid transparent;
+    transition: all 0.15s;
+  }
+
+  .nav-item:hover { color: #fff; background: #2c2825; }
+  .nav-item.active { color: #fff; border-left-color: var(--accent); background: #2c2825; }
+
+  .nav-item .icon { font-size: 15px; min-width: 20px; }
+
+  .logout-btn {
+    margin: 16px;
+    background: transparent;
+    border: 1px solid #2c2825;
+    color: #6b6560;
+    padding: 8px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 12px;
+    font-family: 'Outfit', sans-serif;
+    transition: all 0.15s;
+    width: calc(100% - 32px);
+  }
+
+  .logout-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* ── MAIN ── */
+  main {
+    flex: 1;
+    padding: 32px 40px;
+    overflow-y: auto;
+    max-width: 1100px;
+  }
+
+  .page-title {
+    font-size: 28px;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+    margin-bottom: 4px;
+  }
+
+  .page-sub {
+    font-size: 14px;
+    color: var(--muted);
+    margin-bottom: 28px;
+  }
+
+  /* ── CARDS ── */
+  .card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+
+  .card {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    overflow: hidden;
+  }
+
+  .card-header {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 14px;
+    font-weight: 700;
+  }
+
+  .card-body { padding: 20px; }
+
+  /* ── FORM ELEMENTS ── */
+  .field {
+    margin-bottom: 14px;
+  }
+
+  label.field-label {
+    display: block;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 5px;
+  }
+
+  input.field-input, select.field-input, textarea.field-input {
+    width: 100%;
+    background: var(--bg);
+    border: 1.5px solid var(--border);
+    color: var(--text);
+    font-family: 'Outfit', sans-serif;
+    font-size: 13px;
+    padding: 9px 12px;
+    border-radius: 8px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  input.field-input:focus, select.field-input:focus { border-color: var(--blue); }
+
+  .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+  /* ── BUTTONS ── */
+  .btn {
+    padding: 9px 20px;
+    border-radius: 8px;
+    font-family: 'Outfit', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    border: none;
+    transition: all 0.15s;
+  }
+
+  .btn-primary { background: var(--text); color: #fff; }
+  .btn-primary:hover { background: #2c2825; }
+  .btn-success { background: var(--accent2); color: #fff; }
+  .btn-success:hover { background: #15803d; }
+  .btn-danger { background: var(--accent); color: #fff; }
+  .btn-danger:hover { background: #b91c1c; }
+  .btn-warning { background: var(--amber); color: #fff; }
+  .btn-warning:hover { background: #b45309; }
+  .btn-blue { background: var(--blue); color: #fff; }
+  .btn-blue:hover { background: #1d4ed8; }
+  .btn-outline { background: transparent; border: 1.5px solid var(--border); color: var(--text); }
+  .btn-outline:hover { border-color: var(--text); }
+  .btn-sm { padding: 6px 14px; font-size: 12px; }
+  .btn-full { width: 100%; }
+
+  .btn-group { display: flex; gap: 8px; flex-wrap: wrap; }
+
+  /* ── ALERTS ── */
+  .alert {
+    padding: 10px 14px;
+    border-radius: 8px;
+    font-size: 13px;
+    margin-top: 12px;
+    display: none;
+    font-weight: 500;
+  }
+
+  .alert-success { background: #dcfce7; color: #166534; border: 1px solid #bbf7d0; display: block; }
+  .alert-error   { background: #fee2e2; color: #991b1b; border: 1px solid #fecaca; display: block; }
+  .alert-info    { background: #dbeafe; color: #1e40af; border: 1px solid #bfdbfe; display: block; }
+
+  /* ── TABLES ── */
+  .table-wrap { overflow-x: auto; }
+
+  table.data-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+
+  table.data-table th {
+    text-align: left;
+    padding: 10px 14px;
+    background: var(--bg);
+    color: var(--muted);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+  }
+
+  table.data-table td {
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: middle;
+  }
+
+  table.data-table tr:last-child td { border-bottom: none; }
+  table.data-table tr:hover td { background: var(--bg); }
+
+  .badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 700;
+  }
+
+  .badge-green { background: #dcfce7; color: #166534; }
+  .badge-red   { background: #fee2e2; color: #991b1b; }
+  .badge-blue  { background: #dbeafe; color: #1e40af; }
+  .badge-amber { background: #fef3c7; color: #92400e; }
+
+  /* ── LOGIN SCREEN ── */
+  .login-screen {
+    min-height: 100vh;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg);
+  }
+
+  .login-card {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 40px;
+    width: 100%;
+    max-width: 420px;
+  }
+
+  .login-card h2 {
+    font-size: 26px;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+    margin-bottom: 6px;
+  }
+
+  .login-card p { font-size: 14px; color: var(--muted); margin-bottom: 28px; }
+
+  .role-tabs {
+    display: flex;
+    background: var(--bg);
+    border-radius: 10px;
+    padding: 3px;
+    margin-bottom: 20px;
+  }
+
+  .role-tab {
+    flex: 1;
+    text-align: center;
+    padding: 8px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    color: var(--muted);
+    transition: all 0.15s;
+  }
+
+  .role-tab.active { background: var(--white); color: var(--text); box-shadow: 0 1px 4px rgba(0,0,0,0.1); }
+
+  .spinner {
+    display: inline-block;
+    width: 14px; height: 14px;
+    border: 2px solid rgba(255,255,255,0.3);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: spin 0.6s linear infinite;
+    vertical-align: middle;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .hidden { display: none !important; }
+
+  ::-webkit-scrollbar { width: 5px; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div class="login-screen" id="login-screen">
+  <div class="login-card">
+    <h2>Panel de Pruebas</h2>
+    <p>Inicia sesión para explorar el sistema Kardex</p>
+
+    <div class="role-tabs">
+      <div class="role-tab active" onclick="setRole('alumno',this)">Alumno</div>
+      <div class="role-tab" onclick="setRole('docente',this)">Docente</div>
+      <div class="role-tab" onclick="setRole('admin',this)">Admin</div>
+    </div>
+
+    <div class="field">
+      <label class="field-label" id="login-label">Matrícula</label>
+      <input class="field-input" id="login-user" value="A010" placeholder="Matrícula">
+    </div>
+    <div class="field">
+      <label class="field-label">Contraseña</label>
+      <input class="field-input" id="login-pass" type="password" value="pass123">
+    </div>
+    <div id="login-msg"></div>
+    <button class="btn btn-primary btn-full" style="margin-top:8px" onclick="doLogin()">
+      Entrar al sistema →
+    </button>
+
+    <div style="margin-top:20px; padding-top:16px; border-top:1px solid var(--border); font-size:11px; color:var(--muted)">
+      <strong>Cuentas de prueba:</strong><br>
+      Alumno: A010 / pass123 &nbsp;|&nbsp; Admin: admin / admin123 &nbsp;|&nbsp; Docente: D001 / pass123
+    </div>
+  </div>
+</div>
+
+<!-- APP -->
+<aside id="app-sidebar" class="hidden">
+  <div class="brand">
+    <h1>Kardex <span>●</span></h1>
+    <p>Panel de Pruebas Integrado</p>
+  </div>
+
+  <div class="session-box">
+    <div class="label">SESIÓN ACTIVA</div>
+    <div class="session-badge session-active" id="session-info">—</div>
+  </div>
+
+  <nav id="app-nav"></nav>
+
+  <button class="logout-btn" onclick="logout()">↩ Cerrar sesión</button>
+</aside>
+
+<main id="app-main" class="hidden">
+  <div id="content"></div>
+</main>
+
+<script>
+  let BASE = 'http://localhost:3000';
+  let currentRole = 'alumno';
+  let currentUser = null;
+
+  // ── Role tabs ─────────────────────────────────────────────────────────────
+  function setRole(role, el) {
+    currentRole = role;
+    document.querySelectorAll('.role-tab').forEach(t => t.classList.remove('active'));
+    el.classList.add('active');
+    const label = document.getElementById('login-label');
+    const input = document.getElementById('login-user');
+    if (role === 'admin') { label.textContent = 'Usuario'; input.value = 'admin'; }
+    else if (role === 'docente') { label.textContent = 'Matrícula'; input.value = 'D001'; }
+    else { label.textContent = 'Matrícula'; input.value = 'A010'; }
+  }
+
+  // ── Login ─────────────────────────────────────────────────────────────────
+  async function doLogin() {
+    const user = document.getElementById('login-user').value;
+    const pass = document.getElementById('login-pass').value;
+    const msg  = document.getElementById('login-msg');
+
+    let url, body;
+    if (currentRole === 'alumno')  { url = '/api/auth/login';         body = { matricula: user, password: pass }; }
+    if (currentRole === 'admin')   { url = '/api/auth/admin/login';   body = { usuario: user, password: pass }; }
+    if (currentRole === 'docente') { url = '/api/auth/docente/login'; body = { matricula: user, password: pass }; }
+
+    try {
+      const res  = await fetch(BASE + url, { method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+      const data = await res.json();
+      if (!res.ok) { msg.innerHTML = `<div class="alert alert-error">${data.error || data.message}</div>`; return; }
+
+      currentUser = data.alumno || data.admin || data.docente;
+      document.getElementById('login-screen').classList.add('hidden');
+      document.getElementById('app-sidebar').classList.remove('hidden');
+      document.getElementById('app-main').classList.remove('hidden');
+      document.getElementById('session-info').textContent =
+        `${currentRole.toUpperCase()} · ${currentUser.nombre || currentUser.usuario} ${currentUser.apellidos || ''}`;
+
+      buildNav();
+      if (currentRole === 'alumno') showKardex();
+      else if (currentRole === 'docente') showDocenteHome();
+      else showAdminHome();
+
+    } catch(e) {
+      msg.innerHTML = `<div class="alert alert-error">Error: ${e.message}</div>`;
+    }
+  }
+
+  // ── Nav ───────────────────────────────────────────────────────────────────
+  function buildNav() {
+    const nav = document.getElementById('app-nav');
+    const menus = {
+      alumno: [
+        { icon: '📋', label: 'Mi Kardex', fn: 'showKardex()' },
+        { icon: '👤', label: 'Mi perfil', fn: 'showPerfil()' },
+      ],
+      docente: [
+        { icon: '🏠', label: 'Inicio', fn: 'showDocenteHome()' },
+        { icon: '📚', label: 'Mis Materias', fn: 'showMisMaterias()' },
+        { icon: '👨‍🎓', label: 'Ver Alumnos', fn: 'showMisAlumnos()' },
+        { icon: '📝', label: 'Capturar Calif.', fn: 'showCapturar()' },
+        { icon: '✏️', label: 'Editar Calif.', fn: 'showEditar()' },
+      ],
+      admin: [
+        { icon: '🏠', label: 'Inicio', fn: 'showAdminHome()' },
+        { icon: '👨‍🎓', label: 'Alumnos', fn: 'showAdminAlumnos()' },
+        { icon: '📚', label: 'Materias', fn: 'showAdminMaterias()' },
+        { icon: '🗓', label: 'Semestres', fn: 'showAdminSemestres()' },
+        { icon: '👨‍🏫', label: 'Docentes', fn: 'showAdminDocentes()' },
+        { icon: '📊', label: 'Calificaciones', fn: 'showAdminCalif()' },
+      ]
+    };
+
+    nav.innerHTML = menus[currentRole].map(m => `
+      <div class="nav-item" onclick="activateNav(this); ${m.fn}">
+        <span class="icon">${m.icon}</span> ${m.label}
+      </div>
+    `).join('');
+
+    nav.querySelector('.nav-item').classList.add('active');
+  }
+
+  function activateNav(el) {
+    document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+    el.classList.add('active');
+  }
+
+  async function logout() {
+    await fetch(BASE + '/api/auth/logout', { method: 'POST', credentials: 'include' });
+    location.reload();
+  }
+
+  // ── API helper ────────────────────────────────────────────────────────────
+  async function api(method, path, body) {
+    const opts = { method, credentials: 'include', headers: { 'Content-Type': 'application/json' } };
+    if (body) opts.body = JSON.stringify(body);
+    const res = await fetch(BASE + path, opts);
+    return { ok: res.ok, status: res.status, data: await res.json() };
+  }
+
+  function content(html) { document.getElementById('content').innerHTML = html; }
+
+  function alertHtml(ok, msg) {
+    return `<div class="alert ${ok ? 'alert-success' : 'alert-error'}">${msg}</div>`;
+  }
+
+  // ── ALUMNO VIEWS ──────────────────────────────────────────────────────────
+  async function showKardex() {
+    content('<p style="color:var(--muted)">Cargando kardex...</p>');
+    const { ok, data } = await api('GET', '/api/kardex');
+    if (!ok) { content(alertHtml(false, data.error || 'Error')); return; }
+
+    const semestresHtml = data.semestres.map(s => `
+      <div class="card" style="margin-bottom:16px">
+        <div class="card-header">
+          🗓 ${s.semestre}
+          <span class="badge badge-blue" style="margin-left:auto">Prom. ${s.promedio?.toFixed(1) || '—'}</span>
+        </div>
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead><tr><th>Materia</th><th>Clave</th><th>Calificación</th><th>Docente</th><th>Estatus</th></tr></thead>
+            <tbody>${s.materias.map(m => `
+              <tr>
+                <td>${m.materia}</td>
+                <td><code style="font-family:'JetBrains Mono',monospace;font-size:11px">${m.clave}</code></td>
+                <td><strong>${m.calificacion}</strong></td>
+                <td>${m.docente || '<span style="color:var(--muted)">—</span>'}</td>
+                <td><span class="badge ${m.calificacion >= 6 ? 'badge-green' : 'badge-red'}">${m.calificacion >= 6 ? 'Aprobado' : 'Reprobado'}</span></td>
+              </tr>
+            `).join('')}</tbody>
+          </table>
+        </div>
+      </div>
+    `).join('');
+
+    content(`
+      <div class="page-title">Mi Kardex</div>
+      <div class="page-sub">${data.alumno?.nombre} ${data.alumno?.apellidos} · ${data.alumno?.carrera}</div>
+      ${semestresHtml}
+    `);
+  }
+
+  async function showPerfil() {
+    content(`
+      <div class="page-title">Mi Perfil</div>
+      <div class="page-sub">Información de tu cuenta</div>
+      <div class="card" style="max-width:400px">
+        <div class="card-body">
+          <div class="field">
+            <label class="field-label">Matrícula</label>
+            <input class="field-input" value="${currentUser.matricula}" disabled>
+          </div>
+          <div class="field">
+            <label class="field-label">Nombre</label>
+            <input class="field-input" value="${currentUser.nombre} ${currentUser.apellidos}" disabled>
+          </div>
+          <div class="field">
+            <label class="field-label">Carrera</label>
+            <input class="field-input" value="${currentUser.carrera}" disabled>
+          </div>
+        </div>
+      </div>
+    `);
+  }
+
+  // ── DOCENTE VIEWS ─────────────────────────────────────────────────────────
+  function showDocenteHome() {
+    content(`
+      <div class="page-title">Bienvenido, ${currentUser.nombre}</div>
+      <div class="page-sub">Panel docente · ${currentUser.matricula}</div>
+      <div class="card-grid">
+        <div class="card" style="cursor:pointer" onclick="showMisMaterias()">
+          <div class="card-body" style="text-align:center;padding:32px">
+            <div style="font-size:40px;margin-bottom:12px">📚</div>
+            <div style="font-size:16px;font-weight:700">Mis Materias</div>
+            <div style="font-size:13px;color:var(--muted);margin-top:4px">Ver materias asignadas</div>
+          </div>
+        </div>
+        <div class="card" style="cursor:pointer" onclick="showCapturar()">
+          <div class="card-body" style="text-align:center;padding:32px">
+            <div style="font-size:40px;margin-bottom:12px">📝</div>
+            <div style="font-size:16px;font-weight:700">Capturar</div>
+            <div style="font-size:13px;color:var(--muted);margin-top:4px">Asignar calificaciones</div>
+          </div>
+        </div>
+        <div class="card" style="cursor:pointer" onclick="showEditar()">
+          <div class="card-body" style="text-align:center;padding:32px">
+            <div style="font-size:40px;margin-bottom:12px">✏️</div>
+            <div style="font-size:16px;font-weight:700">Editar</div>
+            <div style="font-size:13px;color:var(--muted);margin-top:4px">Modificar calificaciones</div>
+          </div>
+        </div>
+      </div>
+    `);
+  }
+
+  async function showMisMaterias() {
+    const { data } = await api('GET', '/api/docente/materias');
+    content(`
+      <div class="page-title">Mis Materias</div>
+      <div class="page-sub">Materias y semestres asignados</div>
+      <div class="card">
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead><tr><th>Clave</th><th>Materia</th><th>Semestre</th></tr></thead>
+            <tbody>${data.map(m => `
+              <tr>
+                <td><span class="badge badge-amber">${m.clave_materia}</span></td>
+                <td>${m.materia}</td>
+                <td>${m.semestre}</td>
+              </tr>
+            `).join('')}</tbody>
+          </table>
+        </div>
+      </div>
+    `);
+  }
+
+  async function showMisAlumnos() {
+    const { data: materias } = await api('GET', '/api/docente/materias');
+    const semestres = [...new Set(materias.map(m => m.semestre))].sort();
+    const opsMaterias = materias.map(m => `<option value="${m.clave_materia}">${m.clave_materia} - ${m.materia}</option>`).join('');
+    const opsSemestres = semestres.map(s => `<option value="${s}">${s}</option>`).join('');
+
+    content(`
+      <div class="page-title">Ver Alumnos</div>
+      <div class="page-sub">Busca alumnos por materia y semestre</div>
+      <div class="card" style="max-width:500px;margin-bottom:20px">
+        <div class="card-body">
+          <div class="field-row">
+            <div class="field">
+              <label class="field-label">Materia</label>
+              <select class="field-input" id="va-clave">${opsMaterias}</select>
+            </div>
+            <div class="field">
+              <label class="field-label">Semestre</label>
+              <select class="field-input" id="va-sem">${opsSemestres}</select>
+            </div>
+          </div>
+          <button class="btn btn-blue" onclick="buscarAlumnos()">Buscar alumnos</button>
+        </div>
+      </div>
+      <div id="alumnos-result"></div>
+    `);
+  }
+
+  async function buscarAlumnos() {
+    const clave = document.getElementById('va-clave').value;
+    const sem   = document.getElementById('va-sem').value;
+    const { ok, data } = await api('GET', `/api/docente/alumnos?clave_materia=${clave}&semestre=${sem}`);
+    const el = document.getElementById('alumnos-result');
+    if (!ok || !data.length) { el.innerHTML = alertHtml(false, 'Sin resultados'); return; }
+    el.innerHTML = `
+      <div class="card">
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead><tr><th>Matrícula</th><th>Nombre</th><th>Calificación</th></tr></thead>
+            <tbody>${data.map(a => `
+              <tr>
+                <td>${a.matricula}</td>
+                <td>${a.nombre} ${a.apellidos}</td>
+                <td>${a.calificacion ?? '<span style="color:var(--muted)">—</span>'}</td>
+              </tr>
+            `).join('')}</tbody>
+          </table>
+        </div>
+      </div>
+    `;
+  }
+
+  async function showCapturar() {
+    const { data: materias } = await api('GET', '/api/docente/materias');
+    const semestres = [...new Set(materias.map(m => m.semestre))].sort();
+    content(`
+      <div class="page-title">Capturar Calificación</div>
+      <div class="page-sub">Asigna una nueva calificación</div>
+      <div class="card" style="max-width:440px">
+        <div class="card-body">
+          <div class="field">
+            <label class="field-label">Matrícula Alumno</label>
+            <input class="field-input" id="cc-mat" placeholder="A010">
+          </div>
+          <div class="field">
+            <label class="field-label">Materia</label>
+            <select class="field-input" id="cc-clave">
+              ${materias.map(m => `<option value="${m.clave_materia}">${m.clave_materia} - ${m.materia}</option>`).join('')}
+            </select>
+          </div>
+          <div class="field">
+            <label class="field-label">Semestre</label>
+            <select class="field-input" id="cc-sem">
+              ${semestres.map(s => `<option value="${s}">${s}</option>`).join('')}
+            </select>
+          </div>
+          <div class="field">
+            <label class="field-label">Calificación (0-10)</label>
+            <input class="field-input" id="cc-cal" type="number" min="0" max="10" step="0.1" placeholder="9.5">
+          </div>
+          <button class="btn btn-success btn-full" onclick="enviarCalif('POST')">Guardar calificación</button>
+          <div id="cc-msg"></div>
+        </div>
+      </div>
+    `);
+  }
+
+  async function showEditar() {
+    const { data: materias } = await api('GET', '/api/docente/materias');
+    const semestres = [...new Set(materias.map(m => m.semestre))].sort();
+    content(`
+      <div class="page-title">Editar Calificación</div>
+      <div class="page-sub">Modifica una calificación existente</div>
+      <div class="card" style="max-width:440px">
+        <div class="card-body">
+          <div class="field">
+            <label class="field-label">Matrícula Alumno</label>
+            <input class="field-input" id="cc-mat" placeholder="A010">
+          </div>
+          <div class="field">
+            <label class="field-label">Materia</label>
+            <select class="field-input" id="cc-clave">
+              ${materias.map(m => `<option value="${m.clave_materia}">${m.clave_materia} - ${m.materia}</option>`).join('')}
+            </select>
+          </div>
+          <div class="field">
+            <label class="field-label">Semestre</label>
+            <select class="field-input" id="cc-sem">
+              ${semestres.map(s => `<option value="${s}">${s}</option>`).join('')}
+            </select>
+          </div>
+          <div class="field">
+            <label class="field-label">Nueva Calificación (0-10)</label>
+            <input class="field-input" id="cc-cal" type="number" min="0" max="10" step="0.1">
+          </div>
+          <button class="btn btn-warning btn-full" onclick="enviarCalif('PUT')">Actualizar calificación</button>
+          <div id="cc-msg"></div>
+        </div>
+      </div>
+    `);
+  }
+
+  async function enviarCalif(method) {
+    const matricula   = document.getElementById('cc-mat').value;
+    const clave_materia = document.getElementById('cc-clave').value;
+    const semestre    = document.getElementById('cc-sem').value;
+    const calificacion = parseFloat(document.getElementById('cc-cal').value);
+    const msg = document.getElementById('cc-msg');
+
+    const { ok, data } = await api(method, '/api/docente/calificaciones', { matricula, clave_materia, semestre, calificacion });
+    msg.innerHTML = alertHtml(ok, data.mensaje || data.error || JSON.stringify(data));
+  }
+
+  // ── ADMIN VIEWS ───────────────────────────────────────────────────────────
+  async function showAdminHome() {
+    const [alumnos, materias, docentes] = await Promise.all([
+      api('GET', '/api/admin/alumnos'),
+      api('GET', '/api/admin/materias'),
+      api('GET', '/api/admin/docentes'),
+    ]);
+    content(`
+      <div class="page-title">Panel Admin</div>
+      <div class="page-sub">Resumen del sistema</div>
+      <div class="card-grid">
+        <div class="card">
+          <div class="card-body" style="text-align:center;padding:28px">
+            <div style="font-size:42px;font-weight:800;color:var(--blue)">${alumnos.data.length}</div>
+            <div style="font-size:14px;color:var(--muted);margin-top:4px">Alumnos registrados</div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-body" style="text-align:center;padding:28px">
+            <div style="font-size:42px;font-weight:800;color:var(--accent2)">${materias.data.length}</div>
+            <div style="font-size:14px;color:var(--muted);margin-top:4px">Materias registradas</div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-body" style="text-align:center;padding:28px">
+            <div style="font-size:42px;font-weight:800;color:var(--amber)">${docentes.data.length}</div>
+            <div style="font-size:14px;color:var(--muted);margin-top:4px">Docentes registrados</div>
+          </div>
+        </div>
+      </div>
+    `);
+  }
+
+  async function showAdminAlumnos() {
+    const { data } = await api('GET', '/api/admin/alumnos');
+    content(`
+      <div class="page-title">Alumnos</div>
+      <div class="page-sub">${data.length} alumnos registrados</div>
+      <div class="card-grid">
+        <div class="card" style="grid-column:1/-1">
+          <div class="table-wrap">
+            <table class="data-table">
+              <thead><tr><th>Matrícula</th><th>Nombre</th><th>Apellidos</th><th>Carrera</th><th></th></tr></thead>
+              <tbody>${data.map(a => `
+                <tr>
+                  <td><span class="badge badge-blue">${a.matricula}</span></td>
+                  <td>${a.nombre}</td>
+                  <td>${a.apellidos}</td>
+                  <td>${a.carrera}</td>
+                  <td><button class="btn btn-danger btn-sm" onclick="eliminarAlumno(${a.id},'${a.nombre}')">Eliminar</button></td>
+                </tr>
+              `).join('')}</tbody>
+            </table>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header">➕ Nuevo Alumno</div>
+          <div class="card-body">
+            <div class="field-row">
+              <div class="field"><label class="field-label">Matrícula</label><input class="field-input" id="na-mat" placeholder="A099"></div>
+              <div class="field"><label class="field-label">Nombre</label><input class="field-input" id="na-nom" placeholder="Juan"></div>
+            </div>
+            <div class="field-row">
+              <div class="field"><label class="field-label">Apellidos</label><input class="field-input" id="na-ape" placeholder="Pérez López"></div>
+              <div class="field"><label class="field-label">Contraseña</label><input class="field-input" id="na-pas" type="password" placeholder="pass123"></div>
+            </div>
+            <div class="field"><label class="field-label">Carrera</label><input class="field-input" id="na-car" placeholder="Ingeniería en Sistemas"></div>
+            <button class="btn btn-primary" onclick="crearAlumno()">Crear alumno</button>
+            <div id="na-msg"></div>
+          </div>
+        </div>
+      </div>
+    `);
+  }
+
+  async function crearAlumno() {
+    const { ok, data } = await api('POST', '/api/admin/alumnos', {
+      matricula: document.getElementById('na-mat').value,
+      nombre: document.getElementById('na-nom').value,
+      apellidos: document.getElementById('na-ape').value,
+      carrera: document.getElementById('na-car').value,
+      password: document.getElementById('na-pas').value,
+    });
+    document.getElementById('na-msg').innerHTML = alertHtml(ok, data.mensaje || data.error);
+    if (ok) showAdminAlumnos();
+  }
+
+  async function eliminarAlumno(id, nombre) {
+    if (!confirm(`¿Eliminar a ${nombre}? Se borrarán todas sus calificaciones.`)) return;
+    const { ok, data } = await api('DELETE', `/api/admin/alumnos/${id}`);
+    if (ok) showAdminAlumnos();
+    else alert(data.error);
+  }
+
+  async function showAdminMaterias() {
+    const { data } = await api('GET', '/api/admin/materias');
+    content(`
+      <div class="page-title">Materias</div>
+      <div class="page-sub">${data.length} materias registradas</div>
+      <div class="card">
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead><tr><th>Clave</th><th>Nombre</th><th>Créditos</th></tr></thead>
+            <tbody>${data.map(m => `
+              <tr>
+                <td><span class="badge badge-amber">${m.clave}</span></td>
+                <td>${m.nombre}</td>
+                <td>${m.creditos}</td>
+              </tr>
+            `).join('')}</tbody>
+          </table>
+        </div>
+      </div>
+      <div class="card" style="max-width:440px;margin-top:16px">
+        <div class="card-header">➕ Nueva Materia</div>
+        <div class="card-body">
+          <div class="field-row">
+            <div class="field"><label class="field-label">Clave</label><input class="field-input" id="nm-cla" placeholder="PRG501"></div>
+            <div class="field"><label class="field-label">Créditos</label><input class="field-input" id="nm-cre" type="number" placeholder="6"></div>
+          </div>
+          <div class="field"><label class="field-label">Nombre</label><input class="field-input" id="nm-nom" placeholder="Inteligencia Artificial"></div>
+          <button class="btn btn-primary" onclick="crearMateria()">Crear materia</button>
+          <div id="nm-msg"></div>
+        </div>
+      </div>
+    `);
+  }
+
+  async function crearMateria() {
+    const { ok, data } = await api('POST', '/api/admin/materias', {
+      clave: document.getElementById('nm-cla').value,
+      nombre: document.getElementById('nm-nom').value,
+      creditos: parseInt(document.getElementById('nm-cre').value),
+    });
+    document.getElementById('nm-msg').innerHTML = alertHtml(ok, data.mensaje || data.error);
+    if (ok) showAdminMaterias();
+  }
+
+  async function showAdminSemestres() {
+    const { data } = await api('GET', '/api/admin/semestres');
+    content(`
+      <div class="page-title">Semestres</div>
+      <div class="card-grid">
+        <div class="card">
+          <div class="table-wrap">
+            <table class="data-table">
+              <thead><tr><th>ID</th><th>Nombre</th></tr></thead>
+              <tbody>${data.map(s => `<tr><td>${s.id}</td><td>${s.nombre}</td></tr>`).join('')}</tbody>
+            </table>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header">➕ Nuevo Semestre</div>
+          <div class="card-body">
+            <div class="field"><label class="field-label">Nombre (ej. 2025-1)</label><input class="field-input" id="ns-nom" placeholder="2025-1"></div>
+            <button class="btn btn-primary" onclick="crearSemestre()">Crear</button>
+            <div id="ns-msg"></div>
+          </div>
+        </div>
+      </div>
+    `);
+  }
+
+  async function crearSemestre() {
+    const { ok, data } = await api('POST', '/api/admin/semestres', { nombre: document.getElementById('ns-nom').value });
+    document.getElementById('ns-msg').innerHTML = alertHtml(ok, data.mensaje || data.error);
+    if (ok) showAdminSemestres();
+  }
+
+  async function showAdminDocentes() {
+    const { data } = await api('GET', '/api/admin/docentes');
+    content(`
+      <div class="page-title">Docentes</div>
+      <div class="card">
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead><tr><th>Matrícula</th><th>Nombre</th><th>Email</th><th></th></tr></thead>
+            <tbody>${data.map(d => `
+              <tr>
+                <td><span class="badge badge-blue">${d.matricula}</span></td>
+                <td>${d.nombre} ${d.apellidos}</td>
+                <td>${d.email}</td>
+                <td><button class="btn btn-danger btn-sm" onclick="eliminarDocente(${d.id})">Eliminar</button></td>
+              </tr>
+            `).join('')}</tbody>
+          </table>
+        </div>
+      </div>
+    `);
+  }
+
+  async function eliminarDocente(id) {
+    if (!confirm('¿Eliminar docente?')) return;
+    const { ok, data } = await api('DELETE', `/api/admin/docentes/${id}`);
+    if (ok) showAdminDocentes(); else alert(data.error);
+  }
+
+  async function showAdminCalif() {
+    const [{ data: materias }, { data: semestres }] = await Promise.all([
+      api('GET', '/api/admin/materias'),
+      api('GET', '/api/admin/semestres'),
+    ]);
+    const opsMat = materias.map(m => `<option value="${m.clave}">${m.clave} - ${m.nombre}</option>`).join('');
+    const opsSem = semestres.map(s => `<option value="${s.nombre}">${s.nombre}</option>`).join('');
+
+    content(`
+      <div class="page-title">Calificaciones</div>
+      <div class="card-grid">
+        <div class="card">
+          <div class="card-header">📝 Asignar</div>
+          <div class="card-body">
+            <div class="field"><label class="field-label">Matrícula</label><input class="field-input" id="ac-mat" placeholder="A010"></div>
+            <div class="field"><label class="field-label">Materia</label><select class="field-input" id="ac-cla">${opsMat}</select></div>
+            <div class="field"><label class="field-label">Semestre</label><select class="field-input" id="ac-sem">${opsSem}</select></div>
+            <div class="field"><label class="field-label">Calificación</label><input class="field-input" id="ac-cal" type="number" min="0" max="10" step="0.1"></div>
+            <button class="btn btn-success" onclick="adminCalif('POST','ac')">Asignar</button>
+            <div id="ac-msg"></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header">✏️ Editar</div>
+          <div class="card-body">
+            <div class="field"><label class="field-label">Matrícula</label><input class="field-input" id="ae-mat" placeholder="A010"></div>
+            <div class="field"><label class="field-label">Materia</label><select class="field-input" id="ae-cla">${opsMat}</select></div>
+            <div class="field"><label class="field-label">Semestre</label><select class="field-input" id="ae-sem">${opsSem}</select></div>
+            <div class="field"><label class="field-label">Nueva Calificación</label><input class="field-input" id="ae-cal" type="number" min="0" max="10" step="0.1"></div>
+            <button class="btn btn-warning" onclick="adminCalif('PUT','ae')">Actualizar</button>
+            <div id="ae-msg"></div>
+          </div>
+        </div>
+      </div>
+    `);
+  }
+
+  async function adminCalif(method, prefix) {
+    const { ok, data } = await api(method, '/api/admin/calificaciones', {
+      matricula: document.getElementById(`${prefix}-mat`).value,
+      clave_materia: document.getElementById(`${prefix}-cla`).value,
+      semestre: document.getElementById(`${prefix}-sem`).value,
+      calificacion: parseFloat(document.getElementById(`${prefix}-cal`).value),
+    });
+    document.getElementById(`${prefix}-msg`).innerHTML = alertHtml(ok, data.mensaje || data.error);
+  }
+
+  // Enter to login
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && !document.getElementById('login-screen').classList.contains('hidden')) doLogin();
+  });
+</script>
+</body>
+</html>
